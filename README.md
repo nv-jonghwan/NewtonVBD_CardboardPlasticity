@@ -117,7 +117,7 @@ $$
 
 $$
 E_{\mathrm{membrane},T}=A_T\left[
-\frac{\mu}{2}\bigl(\operatorname{tr}(F^TF)-2\bigr)
+\frac{\mu}{2}\bigl(\mathrm{tr}(F^TF)-2\bigr)
 +\frac{\tilde{\lambda}}{2}(J_s-a_0)^2\right],
 \quad J_s=\sqrt{\det(F^TF)},
 \quad\tilde{\lambda}=\lambda+\mu,
@@ -149,7 +149,7 @@ $$
 아직 소성화되지 않은 힌지에는 `smallBend:*` 보강을 추가합니다. $K_h=(1-d_h)K_h^0$, 보강 배율 $s$, 전환 곡률 $\kappa_k$, 종료 곡률 $\kappa_e$일 때 현재 `memoryCurvature=0` 설정의 모멘트 법칙은 다음과 같습니다.
 
 $$
-M_h=\operatorname{sgn}(e_h)K_hb_h
+M_h=\mathrm{sgn}(e_h)K_hb_h
 \begin{cases}
 s\kappa_h,&0\leq\kappa_h\leq\kappa_k,\\
 s\kappa_k+\dfrac{\kappa_e-s\kappa_k}{\kappa_e-\kappa_k}(\kappa_h-\kappa_k),&\kappa_k<\kappa_h<\kappa_e,\\
@@ -180,7 +180,7 @@ $$
 
 $$
 \Delta\gamma_h=\max\left(0,\frac{|M_h^{\mathrm{trial}}|-Y_h-H_h\alpha_h^n}{K_h+H_h}\right),
-\quad p_h^{n+1}=p_h^n+\operatorname{sgn}(M_h^{\mathrm{trial}})\Delta\gamma_h,
+\quad p_h^{n+1}=p_h^n+\mathrm{sgn}(M_h^{\mathrm{trial}})\Delta\gamma_h,
 \quad\alpha_h^{n+1}=\alpha_h^n+\Delta\gamma_h.
 $$
 
@@ -218,7 +218,7 @@ ROM은 계산된 접힘 애니메이션을 재생하는 기능이 아닙니다. 
 
 $$
 (U^TDU)\Delta z=U^Tf,\qquad \Delta x=U\Delta z,
-\qquad D=\operatorname{blockdiag}(H_1,\ldots,H_N).
+\qquad D=\mathrm{blockdiag}(H_1,\ldots,H_N).
 $$
 
 $D$는 정점별 $3\times3$ 블록을 모은 근사 행렬입니다. 따라서 이 식은 전체 연결 Hessian을 정확하게 투영한 해법이 아니라 **투영된 quasi-Newton 보정**입니다. 정점 위치 자체와 소성 이력은 전체 계산 격자에 유지되며, ROM 공간으로 상태를 강제로 투영하지 않습니다.
