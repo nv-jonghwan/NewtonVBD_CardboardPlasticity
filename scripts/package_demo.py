@@ -5,7 +5,7 @@ ROOT=Path(__file__).resolve().parents[1];dest=ROOT/'deliverables';dest.mkdir(exi
 files=[]
 for directory in ['src','scripts','schemas','assets','docs','tests','exts']:
     files.extend(p for p in (ROOT/directory).rglob('*') if p.is_file() and '__pycache__' not in p.parts and p.suffix!='.pyc')
-files.extend(ROOT/n for n in ['README.md','requirements-lock.txt','requirements-newton15-lock.txt','requirements-newton16-lock.txt'])
+files.extend(ROOT/n for n in ['README.md','README_KR.md','requirements-lock.txt','requirements-newton15-lock.txt','requirements-newton16-lock.txt'])
 for name in ['validation_summary.json','asset_validation.json','checkpoint_validation.json','unit-tests.log','physics_evidence.png','physics_evidence.pdf']:
     files.append(ROOT/'outputs'/name)
 for folder,names in {'plastic':['cardboard_crush_demo.mp4','replay.usdc','deformed_checkpoint.usda','metrics.csv','report.json','trajectory.npz'],'elastic':['metrics.csv','report.json','trajectory.npz','deformed_checkpoint.usda'],'convergence32':['metrics.csv','report.json']}.items():

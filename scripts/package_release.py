@@ -19,7 +19,7 @@ def main():
     # Keep historical generated scenes needed by the source regression suite.
     files.update(p for p in (ROOT / 'assets').glob('*') if p.is_file())
     files.update(ROOT.glob('requirements*lock.txt'))
-    files.update([ROOT / 'README.md', ROOT / '.gitignore'])
+    files.update([ROOT / 'README.md', ROOT / 'README_KR.md', ROOT / '.gitignore'])
     manifest = {'schema_version': 1, 'profile': lock['profile'], 'production_qualified': False,
                 'scope': 'Local review/source bundle. No Python/Kit environments, caches or experimental outputs.',
                 'files': [{'path': p.relative_to(ROOT).as_posix(), 'sha256': sha256(p),

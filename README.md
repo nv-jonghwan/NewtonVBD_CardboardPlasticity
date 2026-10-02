@@ -1,95 +1,97 @@
 # Newton VBD Cardboard
 
-**Newton VBD와 Isaac Sim으로 구현한 로봇의 종이박스 수직 파지·상승·소성 압착·낙하 시뮬레이션**
+[English](README.md) | [한국어](README_KR.md)
 
-UR10과 Robotiq 기반 그리퍼가 테이블 위의 종이박스를 집고, 자세를 수직으로 유지한 채 200 mm 들어 올립니다. 공중에서 박스를 압착한 뒤 그리퍼를 열면 박스가 중력에 의해 테이블로 떨어집니다. 접촉에 따른 변형과 영구적인 접힘은 Newton으로 계산하고, 로봇과 박스의 상태를 Isaac Sim에 표시합니다.
+**Robotic vertical grasping, lifting, plastic crushing, and dropping of a cardboard box with Newton VBD and Isaac Sim**
 
-![수직 파지·상승·압착·낙하 Replay: 왼쪽은 로봇 전체 동작, 오른쪽은 상자 확대 화면](docs/media/vertical-pick-replay.gif)
+A UR10 and a Robotiq-based gripper pick a cardboard box from a table and lift it by 200 mm while maintaining a vertical orientation. After crushing the box in midair, the gripper opens and the box falls back onto the table under gravity. Newton computes contact deformation and permanent creases, while Isaac Sim displays the robot and box states.
 
-*왼쪽: 로봇 전체 동작. 오른쪽: 상자와 그리퍼 확대 화면. 동일한 20초 시뮬레이션 기록을 두 시점에서 동기 재생한 Isaac Sim 렌더링입니다. Replay의 재생 속도는 실시간 물리 계산 성능을 의미하지 않습니다. [MP4 영상](docs/media/vertical-pick-replay.mp4)*
+![Vertical grasp, lift, crush, and drop replay: robot overview on the left and box detail on the right](docs/media/vertical-pick-replay.gif)
 
-| 항목 | 구현 |
+*Left: the complete robot motion. Right: a close-up of the box and gripper. Both Isaac Sim views synchronously replay the same 20-second simulation recording. Replay speed does not represent real-time physics throughput. [MP4 video](docs/media/vertical-pick-replay.mp4)*
+
+| Component | Implementation |
 | --- | --- |
-| 로봇 / 그리퍼 | UR10 / Robotiq 2F-140 기반의 2.3배 확대 가상 모델 |
-| 박스 | 두께 4 mm의 균질화 쉘, 질량 약 0.2195 kg |
-| 변형 계산 | Newton VBD와 rank-8 ROM의 혼합 보정 |
-| 재료 모델 | 면내 탄성, 방향별 굽힘, 영구 접힘, 손상, 접힘 회전 저항 |
-| 계산 / 표시 격자 | 삼각형 2,800 / 37,368 |
-| 동작 | 수직 하강 → 파지 → 수직 상승 → 압착 → 개방·낙하 |
-| 표시 / 조작 | Isaac Sim GUI, Play·Pause·Reset, 전체·확대 보기, 기록 재생 |
-| 재사용 박스 자산 | [`assets/cardboard_simready.usda`](assets/cardboard_simready.usda), USD Custom API 7종 |
-| 수직 동작 프로파일 | [`config/vertical_pick.json`](config/vertical_pick.json) |
+| Robot / gripper | UR10 / virtual model based on the Robotiq 2F-140, scaled by 2.3× |
+| Box | Homogenized shell, 4 mm thick, approximately 0.2195 kg |
+| Deformation solver | Hybrid corrections using Newton VBD and a rank-8 ROM |
+| Material model | In-plane elasticity, directional bending, permanent creases, damage, and resistance to crease rotation |
+| Simulation / display mesh | 2,800 / 37,368 triangles |
+| Motion | Vertical descent → grasp → vertical lift → crush → release and drop |
+| Visualization / controls | Isaac Sim GUI, Play/Pause/Reset, overview/detail views, recorded replay |
+| Reusable box asset | [`assets/cardboard_simready.usda`](assets/cardboard_simready.usda), seven custom USD APIs |
+| Vertical-motion profile | [`config/vertical_pick.json`](config/vertical_pick.json) |
 
-이 저장소는 로봇과 변형체의 접촉 동작을 실행·분석하기 위한 시뮬레이션 구현을 제공합니다. 재료 계수와 확대 그리퍼는 시뮬레이션용 설정이며, 실물 골판지의 측정 물성이나 실제 장비의 하중 사양을 나타내지 않습니다.
+This repository provides a simulation implementation for running and analyzing contact between robots and deformable objects. The material coefficients and enlarged gripper are simulation settings, not measured properties of real corrugated board or load specifications of physical equipment.
 
-## 목차
+## Contents
 
-- [1. 시나리오](#1-시나리오)
-- [2. 시스템 구성](#2-시스템-구성)
-- [Newton 솔버와 박스 물리 모델](#newton-솔버와-박스-물리-모델)
-- [3. 설치](#3-설치)
-- [4. 실행과 재생](#4-실행과-재생)
-- [5. 설정·Custom schema·반응 튜닝](#5-설정)
-- [6. 결과 파일과 영상 생성](#6-결과-파일과-영상-생성)
-- [7. 저장소 구성](#7-저장소-구성)
-- [8. 문제 해결](#8-문제-해결)
-- [9. 적용 범위와 라이선스](#9-적용-범위와-라이선스)
+- [1. Scenario](#1-scenario)
+- [2. System architecture](#2-system-architecture)
+- [Newton solvers and box physics](#newton-solvers-and-box-physics)
+- [3. Installation](#3-installation)
+- [4. Running and replaying](#4-running-and-replaying)
+- [5. Configuration, custom schemas, and response tuning](#5-configuration)
+- [6. Outputs and video generation](#6-outputs-and-video-generation)
+- [7. Repository layout](#7-repository-layout)
+- [8. Troubleshooting](#8-troubleshooting)
+- [9. Scope and licensing](#9-scope-and-licensing)
 
-## 1. 시나리오
+## 1. Scenario
 
-기본 실행은 **20초의 물리 시간**으로 구성됩니다. 그리퍼는 파지부터 압착·개방까지 아래를 향한 자세를 유지하며, 상승 구간에서는 XY 위치를 유지합니다.
+The default run covers **20 seconds of simulation time**. The gripper points downward throughout grasping, crushing, and release, and maintains its XY position during the lift.
 
-| 시간 | 동작 |
+| Time | Motion |
 | --- | --- |
-| 0–1초 | 초기 자세와 박스의 자중 안정화 |
-| 1–3초 | 박스 위로 접근 |
-| 3–5초 | 수직 하강 |
-| 5–7초 | 손가락을 닫아 박스 파지 |
-| 7–9초 | 수직으로 200 mm 상승 |
-| 9–12초 | 공중에서 박스 압착 |
-| 12–13초 | 그리퍼 개방과 자유낙하 |
-| 13–20초 | 그리퍼 후퇴, 테이블 착지와 안정화 관찰 |
+| 0–1 s | Initial pose and box settling under its own weight |
+| 1–3 s | Approach above the box |
+| 3–5 s | Vertical descent |
+| 5–7 s | Close the fingers to grasp the box |
+| 7–9 s | Lift vertically by 200 mm |
+| 9–12 s | Crush the box in midair |
+| 12–13 s | Open the gripper and allow free fall |
+| 13–20 s | Retract the gripper and observe landing and settling |
 
-파지는 그리퍼와 박스 사이의 마찰 접촉으로 이루어집니다. 압착 중 발생한 소성 접힘은 하중을 제거한 뒤에도 남습니다. 로봇 관절은 역기구학으로 정한 궤적을 따르고, 박스의 변형·미끄러짐·낙하는 물리 계산 결과로 결정됩니다.
+Grasping relies on frictional contact between the gripper and box. Plastic creases formed during crushing remain after unloading. Robot joints follow an inverse-kinematics trajectory, while box deformation, slipping, and falling are determined by physics.
 
-## 2. 시스템 구성
+## 2. System architecture
 
 ```mermaid
 flowchart LR
-    A[USD 자산·물성·Custom Solver API] --> B[Newton + 프로젝트 런타임 어댑터]
-    B --> C[로봇·그리퍼 접촉 + 박스 변형]
-    C --> D[위치·자세·재료 이력]
+    A[USD assets / materials / Custom Solver API] --> B[Newton + project runtime adapter]
+    B --> C[Robot and gripper contact + box deformation]
+    C --> D[Positions / poses / material history]
     D --> E[Isaac Sim GUI]
     E --> F[Play / Pause / Reset]
     F --> B
-    D --> G[USD 상태 / CSV / NPZ 기록]
-    G --> H[Replay / 영상 / 결과 분석]
-    P[JSON 실행 프로파일] --> B
+    D --> G[USD state / CSV / NPZ recording]
+    G --> H[Replay / video / result analysis]
+    P[JSON run profile] --> B
 ```
 
-- **물리 계산:** 면내 탄성과 굽힘을 갖는 삼각형 쉘에 소성 접힘·손상·접힌 힌지의 회전 저항을 적용합니다. ROM과 VBD를 결합해 접촉과 변형을 보정합니다.
-- **표시:** 계산 격자에서 더 조밀한 표시 표면을 구성해 판면과 접힘을 표현합니다. Newton worker와 Isaac Sim은 별도 Python 프로세스로 실행됩니다.
-- **재생:** 저장된 정점 위치와 강체 자세를 읽어 동일한 장면을 표시합니다. Replay 중에는 물리를 다시 계산하지 않습니다.
+- **Physics:** A triangular shell with membrane elasticity and bending is extended with plastic creases, damage, and rotational resistance at creased hinges. ROM and VBD corrections handle contact and deformation together.
+- **Visualization:** A denser display surface is derived from the simulation mesh to represent panels and folds. The Newton worker and Isaac Sim run in separate Python processes.
+- **Replay:** Saved vertex positions and rigid-body poses reproduce the same scene. Physics is not recomputed during replay.
 
-기본 적분은 물리 프레임 60 Hz, 프레임당 16서브스텝이며 지지 상태에서는 세분화를 적용합니다. 이 값은 수치 적분 설정이며 화면 FPS나 실제 계산 속도와는 다릅니다.
+Default integration uses 60 Hz physics frames and 16 substeps per frame, with additional refinement when supported. These are numerical integration settings, distinct from display FPS or actual processing speed.
 
-### Newton 솔버와 박스 물리 모델
+### Newton solvers and box physics
 
-현재 수직 동작은 **Newton 1.6.0의 `SolverVBD`를 확장한 `AdaptiveROMVBD`**로 계산합니다. 박스는 삼각형 쉘의 정점 위치를 자유도로 갖고, 그리퍼는 동적 강체·관절로 구성합니다. UR10과 그리퍼 장착부는 IK로 지정한 운동을 따릅니다. Isaac Sim은 계산 결과를 표시하며, 이 장면의 물리를 PhysX와 중복 계산하지 않습니다.
+The current vertical scenario uses **`AdaptiveROMVBD`, an extension of Newton 1.6.0's `SolverVBD`**. The box's degrees of freedom are triangular-shell vertex positions, while the gripper consists of dynamic rigid bodies and joints. The UR10 and gripper mount follow prescribed IK motion. Isaac Sim displays the results; PhysX does not duplicate the physics calculation for this scene.
 
-| 계산 구성 | 담당 구현 | 역할 |
+| Solver component | Implementation | Role |
 | --- | --- | --- |
-| 기본 적분·쉘 해법 | Newton `SolverVBD` | 암시적 Euler에 기반한 정점 블록 반복, 삼각형 면내 탄성, 이면각 굽힘, 접촉 |
-| 그리퍼 강체·관절 | Newton의 강체 AVBD 경로 + [`RigidScheduleMixin`](src/cardboard/rigid_schedule.py) | 강체의 이동·회전 블록, 관절·구동·접촉 항과 dual 갱신. 현재 `rigidCompliantALM=false`인 Newton 1.6 경로 사용 |
-| 박스 전체 운동 보정 | [`TranslationBlockVBD`](src/cardboard/block_solver.py), [`rotation_block.py`](src/cardboard/rotation_block.py), [`rigid_subspace.py`](src/cardboard/rigid_subspace.py) | 강성이 큰 쉘의 느린 전체 이동·회전 모드를 추가로 보정 |
-| 감소 차원·국소 보정 | [`AdaptiveROMVBD`](src/cardboard/rom_solver.py), [`local_vbd.py`](src/cardboard/local_vbd.py) | rank-8 ROM과 접촉·접힘 주변 VBD, 주기적인 전체 정점 보정 |
-| 재료 이력 | [`plasticity.py`](src/cardboard/plasticity.py), [`small_bend_kernels.py`](src/cardboard/small_bend_kernels.py) | 작은 굽힘 보강, 영구 접힘, 경화·손상, 접힌 힌지의 회전 저항 |
+| Base integration and shell solve | Newton `SolverVBD` | Implicit-Euler vertex-block iterations, triangular membrane elasticity, dihedral bending, and contact |
+| Gripper bodies and joints | Newton rigid AVBD path + [`RigidScheduleMixin`](src/cardboard/rigid_schedule.py) | Rigid translation/rotation blocks, joint/drive/contact terms, and dual updates; the current Newton 1.6 path uses `rigidCompliantALM=false` |
+| Global box-motion correction | [`TranslationBlockVBD`](src/cardboard/block_solver.py), [`rotation_block.py`](src/cardboard/rotation_block.py), [`rigid_subspace.py`](src/cardboard/rigid_subspace.py) | Additional corrections for slowly converging global translation and rotation modes of the stiff shell |
+| Reduced and local corrections | [`AdaptiveROMVBD`](src/cardboard/rom_solver.py), [`local_vbd.py`](src/cardboard/local_vbd.py) | Rank-8 ROM, VBD near contacts and creases, and periodic full-vertex corrections |
+| Material history | [`plasticity.py`](src/cardboard/plasticity.py), [`small_bend_kernels.py`](src/cardboard/small_bend_kernels.py) | Small-bend reinforcement, permanent creases, hardening/damage, and rotational resistance at creased hinges |
 
-VBD는 정점 단위 블록 좌표 하강법으로 암시적 적분 문제를 푸는 방법입니다. 같은 색으로 분류한 정점들을 병렬 처리하고 색 그룹 사이에는 갱신된 상태를 전달합니다. 일반 알고리즘은 [VBD 논문·프로젝트](https://graphics.cs.utah.edu/research/projects/vbd/)와 [Newton `SolverVBD` 문서](https://newton-physics.github.io/newton/latest/api/_generated/newton.solvers.SolverVBD.html)를 참고하십시오. 아래 식과 설정은 이 저장소의 Newton 1.6 구현에 맞춰 설명합니다.
+VBD solves implicit integration through block coordinate descent over vertices. Vertices of the same color are processed in parallel, with updated state passed between color groups. See the [VBD paper and project](https://graphics.cs.utah.edu/research/projects/vbd/) and [Newton `SolverVBD` documentation](https://newton-physics.github.io/newton/latest/api/_generated/newton.solvers.SolverVBD.html) for the general algorithm. The equations and settings below describe this repository's Newton 1.6 implementation.
 
-#### 시간 적분과 정점 보정
+#### Time integration and vertex corrections
 
-한 서브스텝의 탄성·관성 문제는, 재료 이력을 고정했을 때 다음 형태로 쓸 수 있습니다. $x_i$는 정점 위치, $m_i$는 정점 질량, $\Delta t$는 서브스텝 시간이며, $\hat{x}_i$는 이전 위치·속도와 중력 등으로 구성한 관성 목표입니다.
+With material history held fixed, the elastic/inertial problem for one substep can be written as follows. $x_i$ is a vertex position, $m_i$ its mass, $\Delta t$ the substep duration, and $\hat{x}_i$ an inertial target constructed from the previous position, velocity, gravity, and other terms.
 
 $$
 \Phi(x)=\frac{1}{2\Delta t^2}\sum_i m_i\|x_i-\hat{x}_i\|^2
@@ -97,23 +99,23 @@ $$
 +\sum_h E_{\mathrm{bend},h}(x;p_h,d_h).
 $$
 
-실제 반복에는 여기에 강체·자기 접촉, 마찰, 감쇠와 접힘 회전 저항의 힘·국소 Hessian 기여를 더합니다. 정점별로 관성 항을 포함한 $3\times3$ 블록을 구성해 $\Delta x_i=H_i^{-1}f_i$를 계산합니다. 여기서 $f_i$는 음의 에너지 기울기에 대응하는 힘 잔차입니다. 커널은 안정화한 국소 Hessian과 충돌 변위 제한을 사용하며, 정해진 반복 예산 안에서 근사해를 구합니다. 재료 이력은 이 위치 계산 뒤에 별도로 갱신합니다.
+The actual iterations also include force and local Hessian contributions from rigid contact, self-contact, friction, damping, and crease rotational resistance. Each vertex forms a $3\times3$ block including inertia and computes $\Delta x_i=H_i^{-1}f_i$, where $f_i$ is the force residual corresponding to the negative energy gradient. Kernels use stabilized local Hessians and collision displacement limits to obtain an approximate solution within a fixed iteration budget. Material history is updated separately after the position solve.
 
-| 현재 실행 설정 | 값·의미 |
+| Current setting | Value / meaning |
 | --- | --- |
-| 물리 프레임 | 60 Hz |
-| 일반 상태 | 프레임당 16서브스텝, $\Delta t=1/960$ s |
-| 기본 솔버 예산 | 서브스텝당 24회; ROM·국소·전체 VBD가 이 예산을 나눠 사용 |
-| 소성 변형 후 지지 상태 | 조건 충족 시 32서브스텝, $\Delta t=1/1920$ s; 이동·회전 결합 보정 |
-| 실행 | Warp CUDA 커널, 상태별 CUDA graph 재사용 |
+| Physics frames | 60 Hz |
+| Normal state | 16 substeps per frame, $\Delta t=1/960$ s |
+| Default solver budget | 24 iterations per substep, shared among ROM, local VBD, and full VBD |
+| Supported state after plastic deformation | 32 substeps when conditions are met, $\Delta t=1/1920$ s; coupled translation/rotation correction |
+| Execution | Warp CUDA kernels and state-dependent CUDA graph reuse |
 
-따라서 “24회 반복”은 24번의 전체 격자 VBD 순회를 뜻하지 않습니다. 또한 60 Hz는 시뮬레이션 시간 간격이며, 벽시계 기준 실시간 처리율과 구분됩니다.
+Thus, “24 iterations” does not mean 24 full-mesh VBD sweeps. Likewise, 60 Hz describes simulation time steps, not wall-clock throughput.
 
-#### 면내 탄성: 판면의 늘어남과 전단
+#### Membrane elasticity: panel stretch and shear
 
-박스는 체적 사면체 대신 **두께를 갖는 중립면 쉘**로 모델링합니다. 삼각형 면적과 면밀도로 질량을 구성하고, 두께는 접촉 반경과 굽힘 강성 보정에도 사용합니다. 현재 1,402개 정점의 위치 자유도는 4,206개입니다.
+The box is modeled as a **midsurface shell with thickness**, rather than volumetric tetrahedra. Triangle areas and areal density determine mass; thickness also affects contact radius and bending stiffness. The current 1,402 vertices have 4,206 positional degrees of freedom.
 
-각 삼각형에서 기준 형상 대비 변형 기울기 $F\in\mathbb{R}^{3\times2}$를 구하고, Newton의 stable Neo-Hookean membrane 커널로 면내 힘을 계산합니다. 현재 커널의 탄성 에너지는 상수항을 제외하면 다음과 같습니다.
+Each triangle computes a deformation gradient $F\in\mathbb{R}^{3\times2}$ relative to its reference configuration. Newton's stable Neo-Hookean membrane kernel supplies the in-plane forces. Omitting constant terms, its current elastic energy is:
 
 $$
 E_{\mathrm{membrane},T}=A_T\left[
@@ -124,18 +126,18 @@ E_{\mathrm{membrane},T}=A_T\left[
 \quad a_0=1+\frac{\mu}{\tilde{\lambda}}.
 $$
 
-$A_T$는 기준 면적이고, $\mu$와 $\lambda$는 각각 USD의 `membraneShear`, `membraneArea`에 대응합니다. 현재 값은 14,112와 23,520 N/m입니다. 이 커널은 판면이 쉽게 늘어나거나 면적이 줄어드는 것을 저항합니다. 면내 모델은 등방성이며, 아래의 방향별 굽힘 보정까지 포함해도 완전한 직교이방성 골판지 구성 모델은 아닙니다.
+$A_T$ is the reference area. $\mu$ and $\lambda$ correspond to the USD properties `membraneShear` and `membraneArea`, currently 14,112 and 23,520 N/m. The kernel resists panel stretching and area reduction. The membrane model is isotropic; even with the directional bending adjustment below, it is not a complete orthotropic constitutive model for corrugated board.
 
-#### 굽힘과 작은 변형에서의 판 강성
+#### Bending and panel stiffness at small deformation
 
-두 삼각형이 공유하는 모서리를 힌지로 사용합니다. 힌지 $h$의 현재 이면각을 $\theta_h$, 기준각을 $\theta_h^0$, 영구 소성각을 $p_h$, 모서리 길이를 $\ell_h$, 양쪽 삼각형 높이의 평균인 유효 폭을 $b_h$라 하면 탄성각과 곡률은 다음과 같습니다.
+An edge shared by two triangles forms a hinge. For hinge $h$, let $\theta_h$ be the current dihedral angle, $\theta_h^0$ the reference angle, $p_h$ the permanent plastic angle, $\ell_h$ the edge length, and $b_h$ the effective width, defined as the average altitude of the adjacent triangles. The elastic angle and curvature are:
 
 $$
 e_h=\theta_h-\theta_h^0-p_h,
 \qquad \kappa_h=\frac{|e_h|}{b_h}.
 $$
 
-방향별 강성과 두께 보정으로 힌지 계수를 구성합니다.
+Directional stiffness and thickness scaling determine the hinge coefficients.
 
 $$
 D_h=\left[D_{CD}+(D_{MD}-D_{CD})w_h\right]
@@ -144,9 +146,9 @@ D_h=\left[D_{CD}+(D_{MD}-D_{CD})w_h\right]
 \quad K_h^0=D_h\frac{\ell_h}{b_h}.
 $$
 
-현재 런타임은 기준 격자 모서리의 Y 성분으로 $w_h$를 계산합니다. $D_{MD/CD}$는 `bendingMD/CD`, $t$는 두께이며 두께 지수 $n=3$입니다. 손상도 $d_h$를 적용한 기본 굽힘 에너지는 $E_{\mathrm{bend},h}=\tfrac12(1-d_h)K_h^0e_h^2$입니다. 기준각과 소성각을 분리하므로 원래 박스 모서리의 각도와 새로 생긴 접힘을 구분할 수 있습니다.
+The runtime computes $w_h$ from the reference mesh edge's Y component. $D_{MD/CD}$ denotes `bendingMD/CD`, $t$ is thickness, and the thickness exponent is $n=3$. With damage $d_h$, the base bending energy is $E_{\mathrm{bend},h}=\tfrac12(1-d_h)K_h^0e_h^2$. Separating reference and plastic angles distinguishes original box corners from newly formed creases.
 
-아직 소성화되지 않은 힌지에는 `smallBend:*` 보강을 추가합니다. $K_h=(1-d_h)K_h^0$, 보강 배율 $s$, 전환 곡률 $\kappa_k$, 종료 곡률 $\kappa_e$일 때 현재 `memoryCurvature=0` 설정의 모멘트 법칙은 다음과 같습니다.
+Hinges that have not yet yielded receive additional `smallBend:*` reinforcement. With $K_h=(1-d_h)K_h^0$, reinforcement scale $s$, knee curvature $\kappa_k$, and end curvature $\kappa_e$, the moment law for the current `memoryCurvature=0` setting is:
 
 $$
 M_h=\mathrm{sgn}(e_h)K_hb_h
@@ -157,19 +159,19 @@ s\kappa_k+\dfrac{\kappa_e-s\kappa_k}{\kappa_e-\kappa_k}(\kappa_h-\kappa_k),&\kap
 \end{cases}
 $$
 
-현재 $s=16$, $\kappa_k=0.75$, $\kappa_e=14.75$ m⁻¹입니다. 작은 굽힘에서는 판을 단단하게 유지하고, 항복 곡률 15 m⁻¹에 도달하기 전에 기본 굽힘 법칙으로 돌아갑니다. 첫 소성화 후에는 이 추가 보강을 해제하고 그에 따른 저장 에너지 감소를 소산 이력에 반영합니다. `memoryCurvature`를 양수로 설정하면 누적 소성 곡률에 따라 보강이 점진적으로 감소합니다.
+Current values are $s=16$, $\kappa_k=0.75$, and $\kappa_e=14.75$ m⁻¹. This keeps panels stiff under small bending, then returns to the base bending law before the yield curvature of 15 m⁻¹. After the first plastic event, the additional reinforcement is removed and the resulting loss of stored energy is included in the dissipation history. A positive `memoryCurvature` makes reinforcement decay gradually with accumulated plastic curvature.
 
-#### 소성 접힘·경화·손상
+#### Plastic creasing, hardening, and damage
 
-현재 자산은 `creaseDamageLength > 0`이므로 `return_map_crease` 경로를 사용합니다. 매 서브스텝의 위치 계산 뒤에 힌지별 **return mapping**으로 영구각 $p_h$, 누적 소성각 $\alpha_h$, 손상 $d_h$를 갱신합니다. 다음 식은 코드의 갱신식을 표기한 것입니다.
+The current asset has `creaseDamageLength > 0` and therefore uses `return_map_crease`. After the position solve in each substep, per-hinge **return mapping** updates permanent angle $p_h$, accumulated plastic angle $\alpha_h$, and damage $d_h$. The following equations express the implemented updates.
 
-먼저 이전 누적각에서 손상을 평가합니다. $c_d$는 `damageRate`, $L_d$는 `creaseDamageLength`, $r$은 `residualStiffness`입니다.
+First, damage is evaluated from the previous accumulated angle. $c_d$ denotes `damageRate`, $L_d$ denotes `creaseDamageLength`, and $r$ denotes `residualStiffness`.
 
 $$
 d_h^n=\min\left(1-r,\;1-\exp\left[-c_d\alpha_h^n L_d/b_h\right]\right).
 $$
 
-이전 손상을 고정한 trial 모멘트, 항복 모멘트와 경화 계수는 다음과 같습니다. $\kappa_y$는 `yieldCurvature`, $\eta$는 `hardeningRatio`입니다.
+Holding the previous damage fixed gives the following trial moment, yield moment, and hardening coefficient. $\kappa_y$ is `yieldCurvature`, and $\eta$ is `hardeningRatio`.
 
 $$
 K_h=(1-d_h^n)K_h^0,\qquad
@@ -184,13 +186,13 @@ $$
 \quad\alpha_h^{n+1}=\alpha_h^n+\Delta\gamma_h.
 $$
 
-이후 $\alpha_h^{n+1}$로 손상을 다시 계산하고 Newton의 힌지 rest angle을 $\theta_h^0+p_h^{n+1}$로 갱신합니다. 그 결과 하중을 제거해도 복원 기준각 자체가 달라져 영구 접힘이 남습니다. 현재 손상 상한은 $1-r=0.82$이며, 강성과 항복 모멘트가 함께 약화됩니다.
+Damage is then recomputed using $\alpha_h^{n+1}$, and Newton's hinge rest angle is set to $\theta_h^0+p_h^{n+1}$. Because the recovery reference angle itself changes, permanent creases remain after unloading. The current damage cap is $1-r=0.82$; stiffness and yield moment weaken together.
 
-`plasticDissipation`에는 $Y_h\Delta\gamma_h$와 손상으로 해제된 탄성·경화 에너지를 누적합니다. 작은 굽힘 보강 해제에 따른 소산도 별도로 더합니다. 위치 해법과 재료 갱신은 **operator splitting**으로 연결되며, 소성 상태까지 하나의 전역 Newton 반복으로 동시에 푸는 구성은 아닙니다. `creaseDamageLength`는 국소 손상 법칙의 길이 척도이고, 균열 에너지나 격자 독립적인 파괴를 보장하는 비국소 모델은 아닙니다.
+`plasticDissipation` accumulates $Y_h\Delta\gamma_h$ and elastic/hardening energy released by damage. Dissipation from removing small-bend reinforcement is added separately. The position solve and material update use **operator splitting**, rather than solving positions and plastic state simultaneously in a single global Newton iteration. `creaseDamageLength` is a length scale in a local damage law, not a nonlocal model that guarantees fracture energy or mesh-independent failure.
 
-#### 접힌 뒤의 회전 저항과 형상 유지
+#### Rotational resistance and shape retention after creasing
 
-소성각은 복원 기준을 바꾸지만, 그것만으로 접힌 판의 이후 움직임이 멈추지는 않습니다. 이 구현은 누적 소성 이력이 있는 힌지에 추가 회전 저항을 적용합니다. 현재 손상을 반영한 $K_h$, 이전 누적각 $\alpha_h$와 `creaseFrictionCurvature` $\kappa_f$로 모멘트 한계를 정합니다.
+Plastic angles change the recovery reference but do not, by themselves, stop subsequent motion of folded panels. This implementation adds rotational resistance at hinges with accumulated plastic history. The moment limit depends on the damage-adjusted $K_h$, previous accumulated angle $\alpha_h$, and `creaseFrictionCurvature` $\kappa_f$.
 
 $$
 M_{h,\max}=K_hb_h\kappa_f
@@ -198,318 +200,318 @@ M_{h,\max}=K_hb_h\kappa_f
 \qquad \kappa_a=5\ \mathrm{m}^{-1},\qquad \kappa_f=45\ \mathrm{m}^{-1}.
 $$
 
-직전 서브스텝 대비 이면각 변화 $\Delta\theta_h$에 대해, 저항 모멘트는 작은 변화에서 선형이고 그 밖에서는 크기가 $M_{h,\max}$로 제한되는 Huber 정규화 법칙을 사용합니다. 선형 구간의 폭은 $\varepsilon_\theta=\Delta t\times(0.005\ \mathrm{rad/s})$입니다. 모멘트는 각도 변화에 반대 방향으로 작용하며, 계산한 일은 `creaseFrictionWork`에 누적합니다.
+For dihedral change $\Delta\theta_h$ from the previous substep, a Huber-regularized law gives a resistance moment that is linear for small changes and bounded in magnitude by $M_{h,\max}$ outside that range. The linear-region width is $\varepsilon_\theta=\Delta t\times(0.005\ \mathrm{rad/s})$. The moment opposes angular change, and its computed work accumulates in `creaseFrictionWork`.
 
-이 항은 그리퍼 개방 시점이나 특정 프레임에 맞춘 형상 고정이 아닙니다. 현재 형상 변화와 소성 이력으로 매번 계산하며 소성각을 초기화하지 않습니다. 접촉면의 Coulomb 마찰과도 별개의 힌지 회전 저항입니다.
+This term does not freeze the shape at gripper release or at a chosen frame. It is recomputed from current shape changes and plastic history without resetting plastic angles. It is hinge rotational resistance, separate from Coulomb friction at contact surfaces.
 
-#### 파지·낙하·자기 접촉
+#### Grasping, falling, and self-contact
 
-그리퍼와 박스 사이에는 별도의 부착 제약이 없습니다. 손가락의 압착에 의한 법선 반력과 접선 마찰로 박스를 지지합니다. 그리퍼를 열어 접촉이 사라지면 박스는 중력·관성에 따라 떨어지고, 테이블 접촉을 통해 지지됩니다.
+No attachment constraint connects the gripper and box. Normal reactions from finger compression and tangential friction support the box. When the gripper opens and contact disappears, the box falls under gravity and inertia until table contact supports it.
 
-- **강체–쉘 접촉:** Newton collision pipeline이 생성한 정점·모서리·면 접촉을 사용합니다. 모서리·면 접촉은 barycentric 가중치로 계산 정점에 분배하고, 동적 그리퍼에는 반대 방향 반력을 반영합니다. 접촉 강성·감쇠와 정규화된 마찰을 포함하므로 유한한 접촉 변형이 존재할 수 있습니다.
-- **자기 접촉:** 정점–삼각형과 모서리–모서리 후보를 검사합니다. 프로젝트 코드는 유효 쌍을 GPU 배열로 압축해 평가하고 Newton의 변위 절단 경로를 유지합니다. 4 mm 두께의 접촉 거리와 기준 형상 인접쌍 제외를 사용하며, 표시 격자의 세밀한 표면 전체를 충돌 형상으로 계산하지는 않습니다.
-- **강체 반복:** 박스와 그리퍼의 위치·접촉을 반복적으로 연결합니다. `guarded` 스케줄은 강체별 활성 접촉을 처리하는 GPU 작업 배치를 조절하며, 접촉 마찰계수나 재료 법칙을 바꾸지 않습니다.
+- **Rigid–shell contact:** Uses vertex, edge, and face contacts produced by Newton's collision pipeline. Edge/face contributions are distributed to simulation vertices with barycentric weights, with opposite reactions applied to the dynamic gripper. Contact stiffness, damping, and regularized friction permit finite contact deformation.
+- **Self-contact:** Tests vertex–triangle and edge–edge candidates. Project code compacts valid pairs into GPU arrays for evaluation while preserving Newton's displacement truncation path. It uses a contact distance corresponding to 4 mm thickness and reference-neighbor exclusions; the entire fine display mesh is not used as collision geometry.
+- **Rigid iterations:** Iteratively couple box and gripper positions and contacts. The `guarded` schedule controls GPU work allocation for each body's active contacts; it does not change contact friction coefficients or material laws.
 
-고정 반복 수, 접촉 허용 거리, 근사 형상과 충돌 갱신 주기를 사용하므로 모든 조건에서 관통이 완전히 없다고 보장하지 않습니다. 또한 규정 운동을 따르는 UR10은 접촉 반력에 따라 자유롭게 밀려나는 실제 로봇 제어기 모델과 구분됩니다.
+Fixed iterations, contact tolerances, approximate geometry, and collision update intervals mean that zero penetration under all conditions is not guaranteed. The UR10's prescribed motion also differs from a physical robot controller model that can be freely displaced by contact reactions.
 
-#### ROM·국소 VBD·전체 운동 보정
+#### ROM, local VBD, and global motion corrections
 
-ROM은 계산된 접힘 애니메이션을 재생하는 기능이 아닙니다. 현재 정점 위치·접촉력·소성 상태에서 힘과 국소 Hessian을 계산하고, 그 **보정 방향**만 저차원 공간에서 구합니다. rank-8 basis $U\in\mathbb{R}^{4206\times8}$는 세 개의 평행이동 모드와 학습 궤적의 중심 이동을 제거한 증분에서 얻은 다섯 POD 모드로 구성됩니다.
+ROM does not replay a precomputed folding animation. Forces and local Hessians are evaluated from current vertex positions, contact forces, and plastic state; only the **correction direction** is found in a low-dimensional space. The rank-8 basis $U\in\mathbb{R}^{4206\times8}$ contains three translation modes and five POD modes learned from trajectory increments with centroid translation removed.
 
 $$
 (U^TDU)\Delta z=U^Tf,\qquad \Delta x=U\Delta z,
 \qquad D=\mathrm{blockdiag}(H_1,\ldots,H_N).
 $$
 
-$D$는 정점별 $3\times3$ 블록을 모은 근사 행렬입니다. 따라서 이 식은 전체 연결 Hessian을 정확하게 투영한 해법이 아니라 **투영된 quasi-Newton 보정**입니다. 정점 위치 자체와 소성 이력은 전체 계산 격자에 유지되며, ROM 공간으로 상태를 강제로 투영하지 않습니다.
+$D$ is an approximate matrix assembled from per-vertex $3\times3$ blocks. This is therefore a **projected quasi-Newton correction**, not an exact projection of the fully coupled Hessian. Vertex positions and plastic history remain on the full simulation mesh; the state itself is not forcibly projected into the ROM space.
 
-현재 24회 반복의 구성은 다음과 같습니다.
+The current 24-iteration schedule is:
 
-| 단계 | 적용 방식 |
+| Stage | Behavior |
 | --- | --- |
-| 홀수 번째 반복 | ROM 보정. 유한값·양의 Cholesky 피벗·basis 표현 오차를 확인하고 보정 크기를 제한 |
-| 짝수 번째 반복 | VBD 보정. 접촉·자기 접촉·소성 이력·큰 곡률의 정점과 한 겹 이웃을 우선 처리 |
-| 8·16·24번째 반복 | 국소 선택을 해제한 전체 정점 VBD 순회 |
-| 국소 VBD | Jacobi 갱신, 완화 계수 0.5 |
-| 내부 요소 평가 | ROM 힘 계산에서 초기 대표 요소 비율 0.25; 소성 이력이 생기면 전체 요소 평가로 전환 |
-| 접촉·관성·재료 이력 | 대표 내부 요소 선택과 별개로 전체 격자에서 처리 |
+| Odd iterations | ROM correction; check finite values, positive Cholesky pivots, and basis representation error, then limit correction size |
+| Even iterations | VBD correction; prioritize vertices with contact, self-contact, plastic history, or high curvature, plus one ring of neighbors |
+| Iterations 8, 16, and 24 | Full-vertex VBD sweeps with local selection disabled |
+| Local VBD | Jacobi updates with relaxation 0.5 |
+| Internal element evaluation | Initial representative-element ratio 0.25 for ROM force evaluation; switch to all elements once plastic history appears |
+| Contact, inertia, and material history | Processed on the full mesh independently of representative internal-element selection |
 
-ROM trial 보정은 최대 정점 이동을 0.1 mm로 제한한 뒤 충돌 변위 제한을 적용합니다. 현재 `romTolerance=1.0`, `romCheckResidual=false`, `romDeferFallback=true`이므로 추가 residual 감소 검사는 하지 않으며, 거부한 ROM 보정은 건너뛰고 다음 예약 VBD 보정으로 넘깁니다. **`schedule=guarded`라는 이름은 이 residual 검사가 활성화되었다는 뜻이 아닙니다.** 새로운 하중·재료·격자에 대한 정확도는 반복 수와 전체 VBD 결과를 비교해 확인해야 합니다.
+ROM trial corrections are capped at 0.1 mm maximum vertex displacement before applying collision displacement limits. Current settings are `romTolerance=1.0`, `romCheckResidual=false`, and `romDeferFallback=true`: no additional residual-decrease check is performed, and a rejected ROM correction is skipped in favor of the next scheduled VBD correction. **The name `schedule=guarded` does not mean this residual check is enabled.** Accuracy for new loads, materials, and meshes must be assessed by varying iterations and comparing with full VBD.
 
-VBD 보정 뒤에는 박스 전체의 공통 이동·회전을 추가로 풉니다. 일반 상태에서는 이동과 회전을 순차 보정하고, 지지 상태에서는 결합된 6자유도 강체 부분공간 보정을 사용합니다. 공통 강체 변환은 쉘의 변형률·이면각·소성 이력을 보존하면서 관성·외부 접촉에 대한 수렴을 돕습니다. 이 보정이 박스를 강체로 바꾸거나 외부에 고정하는 것은 아닙니다.
+After VBD corrections, additional solves adjust common translation and rotation of the entire box. Normal states use sequential translation and rotation corrections; supported states use a coupled six-degree-of-freedom rigid-subspace correction. A common rigid transform preserves shell strain, dihedral angles, and plastic history while improving convergence under inertia and external contact. It does not turn the box into a rigid object or attach it to the environment.
 
-#### 감쇠·정지 판정과 서브스텝 흐름
+#### Damping, sleep criteria, and substep flow
 
-삼각형의 면내 감쇠는 변형 metric의 변화, 굽힘 감쇠는 이면각 변화에 작용합니다. 별도의 내부 속도 감쇠는 질량 가중 강체 속도 $v_i^{\mathrm{rigid}}$를 구한 뒤 비강체 성분만 지수적으로 줄입니다.
+Membrane damping acts on changes in the deformation metric, while bending damping acts on dihedral changes. A separate internal-velocity damping step estimates mass-weighted rigid velocity $v_i^{\mathrm{rigid}}$ and exponentially reduces only its nonrigid component.
 
 $$
 v_i'=v_i^{\mathrm{rigid}}+e^{-c\Delta t}(v_i-v_i^{\mathrm{rigid}}).
 $$
 
-이 내부 감쇠는 전체 이동·회전을 가능한 한 보존합니다. 지지 상태에서는 `supportedRigidDamping`에 따른 추가 감쇠가 적용되어 전체 운동량도 감소할 수 있습니다.
+This internal damping preserves global translation and rotation as far as possible. In the supported state, additional `supportedRigidDamping` can also reduce total momentum.
 
-착지 후에는 지지점 분포, 질량중심 위치, 외부 접촉·하중 변화를 확인합니다. 기본 정지 조건은 0.25초 동안 모든 정점의 이동 폭이 0.5 mm 이하이고 최대 속도가 20 mm/s 이하인 상태입니다. 조건을 만족하면 쉘 속도를 0으로 하고 형상·소성 이력을 유지하며, 새 하중이나 접근 접촉이 감지되면 다시 계산합니다. 따라서 정지 후 속도 0은 수치적 sleep 상태도 포함하며, 정확한 정적 평형을 증명하는 지표는 아닙니다. 구현은 [`internal_damping.py`](src/cardboard/internal_damping.py)와 [`resting.py`](src/cardboard/resting.py)에 있습니다.
+After landing, the implementation checks support-point distribution, center-of-mass position, and changes in external contact and loading. Default sleep criteria require every vertex's motion range to remain within 0.5 mm and maximum speed within 20 mm/s for 0.25 seconds. Once satisfied, shell velocities are set to zero while shape and plastic history are retained; new loads or approaching contact wake the simulation. Zero speed after settling can therefore indicate numerical sleep rather than proof of exact static equilibrium. See [`internal_damping.py`](src/cardboard/internal_damping.py) and [`resting.py`](src/cardboard/resting.py).
 
-깨어 있는 박스의 프레임·서브스텝 계산 순서는 다음과 같습니다.
+Frame and substep processing for an awake box follows this sequence:
 
 ```mermaid
 flowchart TD
-    A[프레임: 동작 목표·중력·지지 상태 갱신] --> B[서브스텝: UR 자세 보간·그리퍼 구동]
-    B --> C[Newton 충돌 후보 생성]
-    C --> D[ROM / VBD · 강체 접촉·관절 반복]
-    D --> E[접힘 저항 소산 기록·내부 속도 감쇠]
-    E --> F[힌지 return mapping: 소성각·손상·rest angle 갱신]
-    F --> G[입출력 상태 교환]
-    G -->|다음 서브스텝| B
-    G -->|프레임 완료| H[보강 해제 소산 집계·진단·USD/Replay 표시]
+    A[Frame: update motion targets / gravity / support state] --> B[Substep: interpolate UR pose / drive gripper]
+    B --> C[Generate Newton collision candidates]
+    C --> D[ROM / VBD and rigid contact / joint iterations]
+    D --> E[Record crease-resistance dissipation / damp internal velocity]
+    E --> F[Hinge return mapping: update plastic angles / damage / rest angles]
+    F --> G[Swap input and output states]
+    G -->|Next substep| B
+    G -->|Frame complete| H[Collect reinforcement-release dissipation / diagnostics / USD and replay display]
 ```
 
-이 모델이 재현하는 범위는 **판면의 탄성 변형, 방향별 굽힘, 접촉 파지·미끄러짐, 국소 영구 접힘·약화, 압착 후 회복과 접힘 유지, 중력 낙하·착지**입니다. 균질화 쉘이므로 골 내부의 세부 압궤, 층간 박리, 찢어짐, 수분 효과는 포함하지 않습니다. 재료 계수는 예시 모델이며, 실제 골판지의 하중–변위 곡선과 반복 접힘 시험에 대한 보정은 별도로 필요합니다.
+The model covers **panel elasticity, directional bending, contact-based grasping and slipping, local permanent creasing and weakening, recovery and crease retention after crushing, and gravity-driven falling and landing**. As a homogenized shell, it excludes detailed flute crushing, delamination, tearing, and moisture effects. Material coefficients are illustrative; calibration against real board load–displacement curves and repeated-fold tests is a separate task.
 
-### SimReady 자산과 Newton 연결
+### SimReady assets and Newton integration
 
-[`assets/cardboard_simready.usda`](assets/cardboard_simready.usda)는 박스를 `/Box` default prim으로 제공하는 재사용 USD 자산입니다. 단위는 미터, up axis는 Z이며 계산 격자, 표시 격자, 재질, 바인딩, 소성 상태와 솔버 설정을 함께 구성합니다. 수직 동작 장면과 같은 박스 정의를 참조하므로 두 자산의 물성과 솔버 설정이 일치합니다.
+[`assets/cardboard_simready.usda`](assets/cardboard_simready.usda) is a reusable USD asset with `/Box` as its default prim. It uses meters and Z-up and includes the simulation mesh, display mesh, materials, bindings, plastic state, and solver settings. It references the same box definition as the vertical-motion scene, keeping material and solver settings consistent between the two assets.
 
 ```text
 /Box
-├── SimMesh               계산 격자, 힌지, 소성 상태, 솔버 설정
-├── RenderMesh            텍스처·UV가 있는 표시 표면과 계산 격자 바인딩
-└── Materials/Cardboard   두께, 탄성, 소성, 손상, 접힘 저항
+├── SimMesh               Simulation mesh, hinges, plastic state, solver settings
+├── RenderMesh            Textured display surface with UVs and simulation-mesh bindings
+└── Materials/Cardboard   Thickness, elasticity, plasticity, damage, crease resistance
 ```
 
-이 자산은 **프로젝트의 Newton 런타임에서 변형체로 실행할 수 있는 simulation-ready 자산**입니다. NVIDIA SimReady의 공식 인증을 의미하지는 않습니다. 지원 기능은 [SimReady 사양](https://docs.omniverse.nvidia.com/simready/latest/overview/simready-spec.html)의 기능별 접근에 따라 아래 USD 계약과 실행 검사로 명시합니다.
+This is a **simulation-ready asset executable as a deformable object in this project's Newton runtime**, not an officially certified NVIDIA SimReady asset. Supported capabilities are described by the USD contract and execution checks below, following the capability-based approach of the [SimReady specification](https://docs.omniverse.nvidia.com/simready/latest/overview/simready-spec.html).
 
-| Custom API | 적용 위치 | 역할 |
+| Custom API | Applied to | Role |
 | --- | --- | --- |
-| `CardboardShellAPI` | `SimMesh` | 기준 형상, 힌지, 방향별 강성, 재질·표시 격자 관계 |
-| `CardboardMaterialAPI` | `Materials/Cardboard` | 두께·밀도·탄성·소성·손상·마찰 및 작은 굽힘 보강·접힘 저항 |
-| `CardboardSolverAPI` | `SimMesh` | Newton ROM/VBD 구현, 반복 수, 스케줄, ROM basis와 보정 설정 |
-| `CardboardPlasticStateAPI` | `SimMesh` | 소성각, 누적 소성각, 손상, 소성·접힘 저항 소산, 속도 |
-| `CardboardBindingAPI` | `RenderMesh` | 계산 정점과 표시 표면의 보간 관계, 접힘 표시 |
-| `CardboardDemoAPI` | 장면의 `/World/Physics` | 시간 적분, 접촉·구동 설정과 대상 관계 |
-| `CardboardScenarioAPI` | 장면의 `/World/Physics` | 파지·상승·압착·개방 시간과 목표 자세 |
+| `CardboardShellAPI` | `SimMesh` | Reference geometry, hinges, directional stiffness, and material/display-mesh relationships |
+| `CardboardMaterialAPI` | `Materials/Cardboard` | Thickness, density, elasticity, plasticity, damage, friction, small-bend reinforcement, and crease resistance |
+| `CardboardSolverAPI` | `SimMesh` | Newton ROM/VBD implementation, iterations, schedule, ROM basis, and correction settings |
+| `CardboardPlasticStateAPI` | `SimMesh` | Plastic and accumulated plastic angles, damage, plastic/crease-resistance dissipation, and velocity |
+| `CardboardBindingAPI` | `RenderMesh` | Interpolation between simulation vertices and display surfaces; fold rendering |
+| `CardboardDemoAPI` | Scene `/World/Physics` | Time integration, contact/drive settings, and target relationships |
+| `CardboardScenarioAPI` | Scene `/World/Physics` | Grasp/lift/crush/release timing and target poses |
 
-Custom schema는 **타입이 등록된 codeless USD API schema**이며 실행 코드는 Python/Warp로 구현합니다. [`schema.usda`](schemas/cardboard/schema.usda)가 정의 원본이고, `scripts/python.sh`가 생성된 플러그인의 등록 경로를 설정합니다.
+The custom schemas are **registered, typed, codeless USD API schemas**; their execution is implemented in Python/Warp. [`schema.usda`](schemas/cardboard/schema.usda) is the authoritative definition, and `scripts/python.sh` configures the generated plugin registration path.
 
-Newton 연결은 다음 순서로 동작합니다.
+Newton integration proceeds as follows:
 
-1. 런타임 어댑터가 USD API 속성과 관계를 읽고 형상·재질·ROM 설정을 검증합니다. 로봇과 환경의 강체·관절·충돌은 `UsdPhysics` 정의에서 가져옵니다.
-2. 박스의 기준 격자는 Newton `ModelBuilder.add_cloth_mesh`로 구성합니다. USD 힌지 순서와 재질 값을 연결하고, 프로젝트의 `AdaptiveROMVBD` 솔버와 소성 상태 갱신을 적용합니다.
-3. GPU에서 계산한 정점·강체 자세를 Isaac Sim에 전달합니다. 표시 격자는 `CardboardBindingAPI`에 따라 계산 격자의 변형을 보간합니다.
-4. 기록 실행은 실제 적용 설정을 `effective_scene.usda`에, 최종 형상과 재료 이력을 `final_state.usda`에 저장합니다.
+1. The runtime adapter reads USD API properties and relationships and validates geometry, materials, and ROM settings. Robot and environment bodies, joints, and collisions come from `UsdPhysics` definitions.
+2. The box reference mesh is built with Newton `ModelBuilder.add_cloth_mesh`. USD hinge ordering and material values are connected to the project's `AdaptiveROMVBD` solver and plastic-state updates.
+3. GPU-computed vertex and rigid-body poses are sent to Isaac Sim. The display mesh interpolates simulation-mesh deformation according to `CardboardBindingAPI`.
+4. Recorded runs store the effective settings in `effective_scene.usda` and final geometry and material history in `final_state.usda`.
 
-박스를 다른 장면에 배치할 때에는 자산의 default prim을 `/World/Box`에 참조하고 해당 장면의 물리·시나리오 설정을 함께 구성합니다. 현재 어댑터는 박스의 이동 변환을 지원하며, 회전·스케일을 바꾸려면 기준 격자에 반영하고 바인딩·ROM을 다시 생성해야 합니다. 로봇·그리퍼 경로도 제공 장면의 구조를 따릅니다. 이 저장소의 런타임 어댑터가 Custom API를 실행하므로, 일반 USD 뷰어에서 파일을 여는 것만으로 Newton 솔버가 시작되거나 PhysX 변형체로 자동 변환되지는 않습니다. USD는 자산과 시뮬레이션 설정을 전달하고 실제 계산은 지원 런타임이 수행합니다. [SimReady 물리 구성 안내](https://docs.omniverse.nvidia.com/simready/latest/simready-asset-creation/physics-best-practices.html)
+To place the box in another scene, reference the asset's default prim at `/World/Box` and configure that scene's physics and scenario settings. The current adapter supports box translation; rotation or scale changes must be baked into the reference mesh, followed by rebuilding bindings and ROM. Robot and gripper paths also follow the supplied scene structure. The repository's runtime adapter executes the custom APIs, so opening the file in a generic USD viewer does not start Newton or automatically convert it to a PhysX deformable. USD carries the asset and simulation configuration; the compatible runtime performs the computation. [SimReady physics guidance](https://docs.omniverse.nvidia.com/simready/latest/simready-asset-creation/physics-best-practices.html)
 
-### 자산이 만들어지는 과정
+### Asset creation pipeline
 
-표시용 3D 모델에 물리 속성과 실행 가능한 데이터 연결을 추가해 박스 자산을 구성합니다. 배포 자산은 이미 생성되어 있으므로 기본 실행에서 이 과정을 반복할 필요는 없습니다.
+The box asset adds physical properties and executable data connections to a visual 3D model. Distributed assets are already generated, so this process is not required for a default run.
 
-| 단계 | 생성 내용 | 구현 위치 |
+| Step | Generated content | Implementation |
 | --- | --- | --- |
-| 1. 원본 확보 | NVIDIA `cardbox_a1` USD·텍스처를 내려받고 체크섬·출처를 보존합니다. 원본 외형과 UV를 표시 표면에 사용합니다. | [`fetch_release_assets.py`](scripts/fetch_release_assets.py), [`release-inputs.lock.json`](config/release-inputs.lock.json) |
-| 2. 계산 쉘 생성 | 외형에 맞는 닫힌 삼각형 중립면을 만들고 두께를 별도 물성으로 정의합니다. 현재 자산은 1,402정점·2,800삼각형입니다. | [`geometry.py`](src/cardboard/geometry.py), [`build_graded_board.py`](scripts/build_graded_board.py) |
-| 3. 힌지·물성 정의 | 인접 삼각형의 4정점 힌지, 기준 이면각, 유효 폭, 방향별 굽힘 계수를 계산합니다. Newton이 구성한 힌지 순서와 일치시킵니다. | [`build_asset.py`](src/cardboard/build_asset.py), [`CardboardShellAPI`](schemas/cardboard/schema.usda) |
-| 4. 표시 표면 연결 | 원본 표시 표면을 세분화하고 각 표시 정점을 계산 삼각형의 3정점·보간 가중치·오프셋으로 연결합니다. UV와 재질을 유지합니다. | [`geometry.py`](src/cardboard/geometry.py), [`surface.py`](src/cardboard/surface.py) |
-| 5. 상태·솔버 부여 | 소성 상태를 0으로 초기화하고 Custom API, 재질 관계, ROM basis와 솔버 속성을 USD에 작성합니다. | [`usd_solver.py`](src/cardboard/usd_solver.py), [`vertical USD`](assets/demo_scene_robotiq_board4_vertical.usda) |
-| 6. ROM 준비 | 같은 계산 격자의 물리 궤적에서 변위 증분 basis를 학습하고 형상·위상 digest를 저장합니다. 실행 중에는 이 basis로 물리 보정을 계산합니다. | [`train_rom_basis.py`](scripts/train_rom_basis.py), [`rom_basis.py`](src/cardboard/rom_basis.py) |
-| 7. 패키징·검증 | `/Box` default prim, 미터·Z축, 상대 자산 경로를 제공하고 USD 구성·바인딩·ROM·GPU 실행·상태 저장을 검사합니다. | [`cardboard_simready.usda`](assets/cardboard_simready.usda), [`audit_usd_contract.py`](scripts/audit_usd_contract.py) |
+| 1. Obtain source assets | Download NVIDIA `cardbox_a1` USD and textures, retaining checksums and provenance. Use the original appearance and UVs for the display surface. | [`fetch_release_assets.py`](scripts/fetch_release_assets.py), [`release-inputs.lock.json`](config/release-inputs.lock.json) |
+| 2. Build the simulation shell | Construct a closed triangular midsurface matching the shape and define thickness separately. The current asset has 1,402 vertices and 2,800 triangles. | [`geometry.py`](src/cardboard/geometry.py), [`build_graded_board.py`](scripts/build_graded_board.py) |
+| 3. Define hinges and materials | Compute four-vertex hinges between adjacent triangles, reference dihedrals, effective widths, and directional bending coefficients; match Newton's hinge ordering. | [`build_asset.py`](src/cardboard/build_asset.py), [`CardboardShellAPI`](schemas/cardboard/schema.usda) |
+| 4. Bind the display surface | Subdivide the source display surface and bind each display vertex to three simulation-triangle vertices, interpolation weights, and an offset. Preserve UVs and materials. | [`geometry.py`](src/cardboard/geometry.py), [`surface.py`](src/cardboard/surface.py) |
+| 5. Assign state and solver | Initialize plastic state to zero and author custom APIs, material relationships, the ROM basis, and solver properties in USD. | [`usd_solver.py`](src/cardboard/usd_solver.py), [`vertical USD`](assets/demo_scene_robotiq_board4_vertical.usda) |
+| 6. Prepare ROM | Learn a displacement-increment basis from physical trajectories on the same simulation mesh and store geometry/topology digests. At runtime the basis computes physical corrections. | [`train_rom_basis.py`](scripts/train_rom_basis.py), [`rom_basis.py`](src/cardboard/rom_basis.py) |
+| 7. Package and validate | Provide `/Box` as default prim, meter/Z-up metadata, and relative asset paths; validate USD composition, bindings, ROM, GPU execution, and state export. | [`cardboard_simready.usda`](assets/cardboard_simready.usda), [`audit_usd_contract.py`](scripts/audit_usd_contract.py) |
 
-`SimMesh`는 물리 계산용이고 `RenderMesh`는 표시용입니다. 표시 격자만 조밀하게 만들어도 물리 해상도가 높아지지는 않습니다. 계산 격자의 형상·정점 순서·위상을 변경하면 힌지, 기준각, 유효 폭, 상태 배열, 표시 바인딩과 ROM basis를 함께 다시 생성해야 합니다. 두께 변경도 중립면 위치·접촉 반경·질량·강성에 영향을 주므로 자산 생성 단계에서 다루는 것이 적절합니다.
+`SimMesh` is for physics; `RenderMesh` is for display. Refining only the display mesh does not increase physical resolution. Changes to simulation geometry, vertex ordering, or topology require regenerating hinges, reference angles, effective widths, state arrays, display bindings, and the ROM basis together. Thickness changes affect midsurface placement, contact radius, mass, and stiffness and are best handled during asset generation.
 
-### 자산 검증
+### Asset validation
 
 ```bash
-# 정의 원본과 배포용 schema의 일치 확인
+# Check that distributed schemas match their source definitions
 ./scripts/python.sh scripts/generate_schemas.py --check
 
-# 자산 구성·Custom API 등록·힌지·표시 바인딩·ROM 호환성 검사
+# Check asset composition, API registration, hinges, display bindings, and ROM compatibility
 ./scripts/python.sh scripts/audit_usd_contract.py
 
-# 완료된 20초 실행의 GPU 결과와 저장된 USD 상태 대조
+# Compare GPU results of a completed 20-second run with saved USD state
 ./scripts/python.sh scripts/audit_usd_contract.py \
   --run-directory outputs/vertical_pick/reference \
   --report outputs/vertical_pick/usd-audit.json
 ```
 
-제공된 수직 동작에 대해 전체 20초 GPU 실행을 확인했습니다. USD의 솔버 반복 수·ROM·접힘 저항이 실행 설정과 일치하며, 최종 USD의 형상·속도·소성각·누적 소성각·손상·소산 이력이 GPU 결과와 일치하는지 검사합니다. 이 검사는 구현과 데이터 연결을 검증하며 실물 재료 보정을 대신하지 않습니다.
+A full 20-second GPU run has been verified for the supplied vertical scenario. Checks compare USD solver iterations, ROM settings, and crease resistance against effective runtime settings, and compare final USD geometry, velocities, plastic angles, accumulated plastic angles, damage, and dissipation history against GPU results. These tests validate implementation and data connections; they do not replace real material calibration.
 
-## 3. 설치
+## 3. Installation
 
-### 실행 환경
+### Runtime environment
 
-| 구성 요소 | 확인된 구성 |
+| Component | Verified configuration |
 | --- | --- |
-| 운영체제 | Ubuntu 24.04 LTS, x86-64 |
-| 계산 환경 | Python 3.12, Newton 1.6.0, Warp 1.17.0 |
+| Operating system | Ubuntu 24.04 LTS, x86-64 |
+| Compute environment | Python 3.12, Newton 1.6.0, Warp 1.17.0 |
 | USD | OpenUSD 25.11 |
 | GPU | NVIDIA RTX 6000 Ada 48 GB |
-| GUI / 렌더링 | Isaac Sim 6.0.1, 별도 Python 환경 |
-| 영상 인코딩 | FFmpeg, GIF 및 H.264 지원 |
+| GUI / rendering | Isaac Sim 6.0.1 in a separate Python environment |
+| Video encoding | FFmpeg with GIF and H.264 support |
 
-GPU 표기는 실행을 확인한 장비입니다. GUI에는 데스크톱 세션과 Vulkan/RTX 렌더링을 지원하는 드라이버가 필요합니다. 물리 계산 전용 실행에는 Isaac Sim이 필요하지 않습니다.
+The listed GPU is the hardware used for validation. The GUI requires a desktop session and a driver supporting Vulkan/RTX rendering. Compute-only physics runs do not require Isaac Sim.
 
-### 계산 환경과 자산
+### Compute environment and assets
 
-저장소 루트에서 실행합니다.
+Run from the repository root.
 
 ```bash
 python3.12 -m venv .venv
 .venv/bin/python -m pip install --upgrade pip
 .venv/bin/python -m pip install -r requirements-lock.txt
 
-# 공식 입력 자산 다운로드 및 체크섬 확인
+# Download official input assets and verify checksums
 python3 scripts/fetch_release_assets.py
 
-# 공통 입력·버전·USD·ROM·CUDA 점검
+# Check shared inputs, versions, USD, ROM, and CUDA
 ./scripts/python.sh scripts/check_release.py --runtime --device cuda:0
 ```
 
-자산이 이미 준비된 환경에서는 `python3 scripts/fetch_release_assets.py --offline`으로 네트워크 연결 없이 확인할 수 있습니다. 자산 출처와 체크섬은 [`config/release-inputs.lock.json`](config/release-inputs.lock.json)에 있습니다.
+If assets are already available, verify them without network access using `python3 scripts/fetch_release_assets.py --offline`. Asset sources and checksums are listed in [`config/release-inputs.lock.json`](config/release-inputs.lock.json).
 
-### Isaac Sim 환경 연결
+### Connecting an Isaac Sim environment
 
-설치된 Isaac Sim 환경의 Python 실행 파일 또는 실행 래퍼를 지정합니다.
+Specify the Python executable or launch wrapper from an installed Isaac Sim environment.
 
 ```bash
 export CARDBOARD_ISAAC_PYTHON=/absolute/path/to/isaac-python
 ```
 
-별도로 설치한 계산 환경을 사용하려면 `CARDBOARD_PYTHON`에 해당 Python 경로를 지정합니다. `scripts/python.sh`는 환경 변수를 우선 사용하고, 프로젝트에 연결된 `.workspace/toolchain`이 있으면 이를 사용하며, 이후 `.venv` 또는 `.venv-gui`를 찾습니다. 계산용 패키지는 Isaac Sim 환경과 분리해 설치합니다.
+To use a separately installed compute environment, set `CARDBOARD_PYTHON` to its Python path. `scripts/python.sh` gives priority to environment variables, then uses a project-bound `.workspace/toolchain` if present, and finally searches for `.venv` or `.venv-gui`. Install compute packages separately from the Isaac Sim environment.
 
-## 4. 실행과 재생
+## 4. Running and replaying
 
-### GUI 실행
+### Launching the GUI
 
 ```bash
-# 창을 연 뒤 Play로 시작
+# Open the window, then press Play
 bash scripts/live_vertical_pick.sh
 
-# 자동 시작 및 새 디렉터리에 전체 동작 기록
+# Autoplay and record the complete cycle to a new directory
 bash scripts/live_vertical_pick.sh --autoplay \
   --output outputs/vertical_pick/gui01
 ```
 
-| 조작 | 기능 |
+| Control | Function |
 | --- | --- |
-| Play / Pause | 물리 계산 시작·재개 / 일시정지 |
-| Reset | 초기 상태와 새 물리 worker로 재시작 |
-| Overview / Box detail | 로봇 전체 보기 / 상자 확대 보기 |
-| Recorded replay | 지정된 폴더의 기록 재생 |
+| Play / Pause | Start or resume physics / pause |
+| Reset | Restart from the initial state with a new physics worker |
+| Overview / Box detail | Full robot view / box close-up |
+| Recorded replay | Replay a recording from the specified directory |
 
-**Box detail**은 상자를 확대하고 카메라의 회전·확대 기준점을 상자에 맞춥니다. 전체·확대 카메라 모두 near clip을 **0.01 m**로 설정해 가까운 상자 표면이 잘리는 현상을 방지합니다.
+**Box detail** zooms in on the box and centers camera orbit and zoom on it. Both overview and detail cameras use a **0.01 m** near clip to prevent nearby box surfaces from being clipped.
 
-완료 후 Play를 누르면 새 동작을 시작합니다. 보관할 실행마다 새 출력 디렉터리를 사용하십시오. 동일 GUI에서 Reset을 반복하면 해당 디렉터리의 최종 기록은 마지막 실행 결과로 갱신됩니다.
+Pressing Play after completion starts a new cycle. Use a fresh output directory for each run you want to retain. Repeated Reset operations in the same GUI overwrite that directory's final recording with the latest run.
 
-### 화면 없이 계산
+### Running without a display
 
 ```bash
 ./scripts/run_headless.sh --profile config/vertical_pick.json \
   --device cuda:0 --output outputs/vertical_pick/reference
 ```
 
-`--device`로 물리 계산 GPU를 선택합니다. GUI 표시는 GPU 0을 사용합니다. `--output`에는 아직 존재하지 않는 경로를 지정하며, 생략하면 실행별 경로가 자동 생성됩니다.
+`--device` selects the physics GPU. GUI rendering uses GPU 0. Supply a path that does not yet exist for `--output`; omitting it generates a per-run path automatically.
 
-### 기록 재생
+### Replaying a recording
 
-계산이 끝난 폴더를 GUI에 연결한 뒤 **Recorded replay**를 누릅니다.
+Point the GUI at a completed run directory, then select **Recorded replay**.
 
 ```bash
 bash scripts/live_vertical_pick.sh \
   --replay-directory outputs/vertical_pick/reference
 ```
 
-Replay에는 같은 실행에서 생성한 `trajectory.npz`와 `state.csv`가 필요합니다. GUI 기록의 CSV는 `state-<pid>.csv`로 생성되므로, worker가 완료된 뒤 해당 파일을 같은 폴더의 `state.csv`로 복사해 사용합니다.
+Replay requires `trajectory.npz` and `state.csv` from the same run. GUI recordings produce `state-<pid>.csv`; once the worker finishes, copy that file to `state.csv` in the same directory.
 
-## 5. 설정
+## 5. Configuration
 
-수직 동작은 [`config/vertical_pick.json`](config/vertical_pick.json)과 [`assets/demo_scene_robotiq_board4_vertical.usda`](assets/demo_scene_robotiq_board4_vertical.usda)로 정의합니다. 이 README의 실행 예제는 수직 동작 프로파일을 사용합니다.
+The vertical scenario is defined by [`config/vertical_pick.json`](config/vertical_pick.json) and [`assets/demo_scene_robotiq_board4_vertical.usda`](assets/demo_scene_robotiq_board4_vertical.usda). Run examples in this README use the vertical-motion profile.
 
-| 설정 위치 | 주요 항목 |
+| Location | Main settings |
 | --- | --- |
-| JSON 프로파일 | 장면, GPU, 실행 시간, 검증할 격자 사양; `solver_source: "usd"` |
-| USD `/World/Box/SimMesh` | `CardboardSolverAPI`: 반복 수 24, guarded 스케줄, rank-8 ROM basis·보정 |
-| USD `/World/Physics` | 동작 단계 시간, 상승 높이, 그리퍼 간격·구동력·기울기 |
-| USD `/World/Box/Materials/Cardboard` | 두께, 탄성·굽힘, 소성·손상, 마찰, `cardboard:smallBend:*` |
-| USD `/World/Box/RenderMesh` | 표시 표면과 접힘 보간 |
+| JSON profile | Scene, GPU, duration, and mesh specifications to validate; `solver_source: "usd"` |
+| USD `/World/Box/SimMesh` | `CardboardSolverAPI`: 24 iterations, guarded schedule, rank-8 ROM basis and corrections |
+| USD `/World/Physics` | Phase timing, lift height, gripper gaps, drive forces, and tilts |
+| USD `/World/Box/Materials/Cardboard` | Thickness, elasticity/bending, plasticity/damage, friction, `cardboard:smallBend:*` |
+| USD `/World/Box/RenderMesh` | Display surface and crease interpolation |
 
-솔버와 접힘 저항의 기준값은 USD에 저장됩니다. JSON 프로파일은 이를 읽어 GUI와 headless 실행에 전달하며 같은 값을 중복 정의하지 않습니다. 작은 굽힘 보강 배율은 16, 접힘 저항 곡률은 45 m⁻¹입니다.
+Reference solver and crease-resistance settings are stored in USD. The JSON profile reads and passes them to GUI and headless runs without duplicating those values. Small-bend reinforcement scale is 16, and crease-resistance curvature is 45 m⁻¹.
 
-수직 프로파일의 파지·상승·압착·개방 기울기는 모두 `(0, 0, 0)`이며 상승 높이는 `0.2 m`입니다. 다른 동작이나 물성을 적용할 때에는 단위(`metersPerUnit = 1`)와 축(`upAxis = "Z"`)을 명시한 별도 USD 루트 레이어와 JSON 프로파일을 만들어 `--profile`로 선택할 수 있습니다. 형상·격자를 변경하면 ROM basis와의 호환성도 확인해야 합니다.
+Grasp, lift, crush, and release tilts in the vertical profile are all `(0, 0, 0)`, and lift height is `0.2 m`. For other motions or materials, create a separate USD root layer and JSON profile with explicit units (`metersPerUnit = 1`) and axis (`upAxis = "Z"`), then select them with `--profile`. Geometry or mesh changes also require checking ROM-basis compatibility.
 
-### Custom schema의 데이터 계약
+### Custom schema data contract
 
-아래 속성명은 모두 `cardboard:` 접두사를 사용합니다. 값은 **현재 수직 장면의 합성 결과**이며 schema fallback 기본값과 다를 수 있습니다. 재료 속성은 `/World/Box/Materials/Cardboard`, 솔버·쉘·상태 속성은 `/World/Box/SimMesh`, 표시 속성은 `/World/Box/RenderMesh`에 있습니다.
+All property names below use the `cardboard:` prefix. Values are the **composed values of the current vertical scene** and may differ from schema fallbacks. Material properties live on `/World/Box/Materials/Cardboard`; solver, shell, and state properties on `/World/Box/SimMesh`; and display properties on `/World/Box/RenderMesh`.
 
-| 재료 속성 | 타입·단위 | 현재 값 | 반응에 미치는 영향 |
+| Material property | Type / unit | Current value | Effect on response |
 | --- | --- | --- | --- |
-| `thickness` / `arealDensity` | float, m / kg·m⁻² | 0.004 / 0.72 | 접촉 두께·질량. 두께만 바꾸어 다른 물성이 모두 일관되게 바뀌는 것은 아닙니다. |
-| `membraneShear` / `membraneArea` | float, N·m⁻¹ | 14,112 / 23,520 | 판면의 전단·면적 변형 저항 |
-| `bendingMD` / `bendingCD` | float, N·m | 0.55556 / 0.27778 | 기준 두께에서 두 방향의 굽힘 강성. 현재 두께 보정 계수 0.512를 곱해 사용합니다. |
-| `bendingReferenceThickness` / `bendingThicknessExponent` | float, m / 무차원 | 0.005 / 3 | 굽힘 강성 배율 `(thickness / referenceThickness)^exponent` |
-| `yieldCurvature` | float, m⁻¹ | 15 | 영구 접힘이 시작되는 곡률 기준. 낮추면 더 쉽게 소성화됩니다. |
-| `hardeningRatio` | float, 무차원 | 0.01 | 소성 변형 누적에 따른 경화 |
-| `damageRate` / `creaseDamageLength` | float, 무차원 / m | 4 / 0.005333 | 누적 소성 곡률에 따른 국소 접힘 약화 |
-| `residualStiffness` | float, 0–1 | 0.18 | 손상 후에도 남는 강성의 최소 비율 |
-| `plasticityEnabled` | bool | true | 소성 갱신 활성화 |
-| `friction` | float, 무차원 | 0.65 | 박스와 접촉 물체 사이의 마찰 |
-| `bendingRelaxationTime` | float, s | 0.02 | 굽힘 강성에 비례한 감쇠 시간 계수 |
-| `internalVelocityDamping` | float, s⁻¹ | 60 | 내부 변형 속도 감쇠. 접촉 마찰이나 영구 접힘과는 별도입니다. |
-| `smallBend:scale` | double, 무차원 | 16 | 아직 접히지 않은 판의 작은 굽힘 강성 배율 |
-| `smallBend:knee` / `smallBend:end` | double, m⁻¹ | 0.75 / 14.75 | 보강 구간의 전환 시작·종료 곡률 |
-| `smallBend:memoryCurvature` | double, m⁻¹ | 0 | 0이면 첫 소성화 시 보강을 해제합니다. 양수이면 누적 소성 곡률에 따라 점진적으로 해제합니다. |
-| `smallBend:creaseFrictionCurvature` | double, m⁻¹ | 45 | 이미 접힌 힌지의 추가 회전을 저항해 접힘 뒤의 형상 유지에 영향을 줍니다. |
+| `thickness` / `arealDensity` | float, m / kg·m⁻² | 0.004 / 0.72 | Contact thickness and mass. Changing thickness alone does not consistently update every other material property. |
+| `membraneShear` / `membraneArea` | float, N·m⁻¹ | 14,112 / 23,520 | Resistance to panel shear and area change |
+| `bendingMD` / `bendingCD` | float, N·m | 0.55556 / 0.27778 | Directional bending stiffnesses at the reference thickness; currently multiplied by a thickness factor of 0.512 |
+| `bendingReferenceThickness` / `bendingThicknessExponent` | float, m / dimensionless | 0.005 / 3 | Bending multiplier `(thickness / referenceThickness)^exponent` |
+| `yieldCurvature` | float, m⁻¹ | 15 | Curvature threshold for permanent creasing; lowering it makes yielding easier |
+| `hardeningRatio` | float, dimensionless | 0.01 | Hardening with accumulated plastic deformation |
+| `damageRate` / `creaseDamageLength` | float, dimensionless / m | 4 / 0.005333 | Local crease weakening with accumulated plastic curvature |
+| `residualStiffness` | float, 0–1 | 0.18 | Minimum stiffness fraction retained after damage |
+| `plasticityEnabled` | bool | true | Enable plastic-state updates |
+| `friction` | float, dimensionless | 0.65 | Friction between the box and contacting objects |
+| `bendingRelaxationTime` | float, s | 0.02 | Time coefficient for damping proportional to bending stiffness |
+| `internalVelocityDamping` | float, s⁻¹ | 60 | Internal deformation-velocity damping, separate from contact friction and permanent creasing |
+| `smallBend:scale` | double, dimensionless | 16 | Small-bend stiffness multiplier for panels that have not yet creased |
+| `smallBend:knee` / `smallBend:end` | double, m⁻¹ | 0.75 / 14.75 | Start/end curvatures of the reinforcement transition |
+| `smallBend:memoryCurvature` | double, m⁻¹ | 0 | Zero removes reinforcement at first yield; positive values remove it gradually with accumulated plastic curvature |
+| `smallBend:creaseFrictionCurvature` | double, m⁻¹ | 45 | Resists additional rotation at already creased hinges and affects post-crease shape retention |
 
-작은 굽힘 보강은 `0 < scale × knee < end < yieldCurvature`를 만족해야 합니다. 예를 들어 현재 설정에서 `scale`만 크게 올리면 이 조건을 벗어날 수 있습니다. `creaseFrictionCurvature`는 힌지 강성과 유효 폭에 곱해 회전 저항 모멘트로 변환하는 모델 계수이며, 접촉면 마찰계수나 측정된 골판지 물성 자체는 아닙니다.
+Small-bend reinforcement must satisfy `0 < scale × knee < end < yieldCurvature`. For example, increasing only `scale` substantially can violate this condition. `creaseFrictionCurvature` is a model coefficient multiplied by hinge stiffness and effective width to obtain a resisting moment; it is neither a contact friction coefficient nor a directly measured board property.
 
-| 쉘·표시·상태 속성 | 타입·배열 크기 | 의미 |
+| Shell / display / state property | Type / array size | Meaning |
 | --- | --- | --- |
-| `restPoints` | point3f[N], m | 기준 계산 정점; N = 1,402 |
-| `hingeIndices` | int4[H] | 힌지의 양쪽 맞은편 정점과 공통 모서리 정점; H = 4,200 |
-| `referenceAngles` / `dualWidths` | float[H], rad / m | 기준 이면각과 곡률 계산용 유효 폭 |
-| `edgeStiffness` | float[H], N | 저장된 기준 힌지 계수. 실행 시 편집한 재질에서 방향별 값을 다시 계산합니다. |
-| `materialDirection` | float3[] | 생성 단계의 재료 방향 정보. 현재 런타임 굽힘 방향 가중치는 기준 격자 모서리에서 계산합니다. |
-| `material` / `renderMesh` / `simulationMesh` | relationship | 재질·계산 격자·표시 격자 연결 |
-| `bindingIndices` / `bindingWeights` / `bindingOffsets` | int3[R] / float3[R] / vector3f[R] | 표시 정점별 계산 삼각형, 합이 1인 가중치, 오프셋(m) |
-| `surfaceInterpolation` | token | 현재 `creaseAwareCubic`; 판면과 접힘을 표현하는 표시 보간 |
-| `visualCreaseAngleDegrees` / `visualCreaseTransitionDegrees` | float, degree | 표시 표면의 접힘 강조 기준·전환 폭; 물리 강성은 바뀌지 않습니다. |
-| `plasticAngles` / `accumulatedAngles` | float[H], rad | 부호 있는 영구각 / 누적 소성각 |
-| `damage` | float[H], 무차원 | 힌지 손상도; 현재 상한은 `1 − residualStiffness` |
-| `plasticDissipation` / `creaseFrictionWork` | float[H], J | 소성·손상 관련 소산 / 접힘 회전 저항 소산 |
-| `velocities` | vector3f[N], m·s⁻¹ | 최종 계산 정점 속도 |
+| `restPoints` | point3f[N], m | Reference simulation vertices; N = 1,402 |
+| `hingeIndices` | int4[H] | Opposite vertices and shared-edge vertices of each hinge; H = 4,200 |
+| `referenceAngles` / `dualWidths` | float[H], rad / m | Reference dihedral angles and effective widths for curvature calculation |
+| `edgeStiffness` | float[H], N | Stored reference hinge coefficients; runtime recomputes directional values from edited material properties |
+| `materialDirection` | float3[] | Material-direction information from asset generation; runtime bending-direction weights currently come from reference mesh edges |
+| `material` / `renderMesh` / `simulationMesh` | relationship | Connections among material, simulation mesh, and display mesh |
+| `bindingIndices` / `bindingWeights` / `bindingOffsets` | int3[R] / float3[R] / vector3f[R] | Simulation triangle, weights summing to one, and offset in meters for each display vertex |
+| `surfaceInterpolation` | token | Currently `creaseAwareCubic`, display interpolation for panels and folds |
+| `visualCreaseAngleDegrees` / `visualCreaseTransitionDegrees` | float, degree | Crease-emphasis threshold and transition width for display; physical stiffness is unchanged |
+| `plasticAngles` / `accumulatedAngles` | float[H], rad | Signed permanent angles / accumulated plastic angles |
+| `damage` | float[H], dimensionless | Hinge damage; currently capped at `1 − residualStiffness` |
+| `plasticDissipation` / `creaseFrictionWork` | float[H], J | Plastic/damage-related dissipation / crease rotational-resistance dissipation |
+| `velocities` | vector3f[N], m·s⁻¹ | Final simulation-vertex velocities |
 
-상태 배열은 실행 결과입니다. 반응을 튜닝할 때에는 재질·동작 속성을 수정하고 새로운 초기 상태에서 실행합니다. 최종 소성각이나 손상 배열을 임의로 편집해 원하는 형태를 만드는 방식은 사용하지 않습니다.
+State arrays are simulation outputs. Tune response by modifying material or motion properties and starting from a new initial state. Do not arbitrarily edit final plastic angles or damage arrays to create a desired shape.
 
-| `CardboardSolverAPI` 속성 (`cardboard:solver:` 뒤) | 타입·현재 값 | 역할 |
+| `CardboardSolverAPI` property (after `cardboard:solver:`) | Type / current value | Role |
 | --- | --- | --- |
-| `implementation` / `schedule` | token, `adaptiveROMVBD` / `guarded` | 프로젝트 솔버와 접촉 처리 스케줄 선택 |
-| `iterations` | int, 24 | 기본 반복 예산. 이 프로파일에서는 기존 Demo API의 `iterations`보다 우선합니다. |
-| `romBasis` | asset, `models/board4_rank8.npz` | 속성을 작성한 USD 레이어 기준으로 해석되는 ROM 파일 경로 |
-| `romTolerance` / `romFullEvery` | double / int, 1 / 2 | ROM 표현 오차 허용 기준과 전체 VBD 보정 주기 |
-| `romStartWithROM` / `romCheckResidual` / `romDeferFallback` | bool, true / false / true | ROM 시작, 추가 residual 검사, 거부 보정의 예약된 VBD 처리 |
-| `romElementFraction` / `romElementFullAfterYield` | double / bool, 0.25 / true | 대표 내부 요소 비율과 소성 이력 발생 후 전체 요소 사용 |
-| `romLocalVBD` / `romPatchRings` | bool / int, true / 1 | 접촉·접힘 주변 국소 VBD 보정과 이웃 범위 |
-| `romPatchCurvature` / `romPatchFullEvery` | double / int, 7.5 m⁻¹ / 8 | 국소 패치의 곡률 기준과 전체 보정 주기 |
-| `romPatchSolver` / `romPatchRelaxation` | token / double, `jacobi` / 0.5 | 국소 보정 방식과 완화 계수 |
+| `implementation` / `schedule` | token, `adaptiveROMVBD` / `guarded` | Select the project solver and contact-processing schedule |
+| `iterations` | int, 24 | Base iteration budget; takes precedence over the older Demo API `iterations` in this profile |
+| `romBasis` | asset, `models/board4_rank8.npz` | ROM file path resolved relative to the USD layer authoring the property |
+| `romTolerance` / `romFullEvery` | double / int, 1 / 2 | ROM representation-error tolerance and full VBD correction interval |
+| `romStartWithROM` / `romCheckResidual` / `romDeferFallback` | bool, true / false / true | Start with ROM, enable an extra residual check, and defer rejected corrections to scheduled VBD |
+| `romElementFraction` / `romElementFullAfterYield` | double / bool, 0.25 / true | Representative internal-element fraction and use of all elements after plastic history appears |
+| `romLocalVBD` / `romPatchRings` | bool / int, true / 1 | Local VBD near contact/creases and neighborhood extent |
+| `romPatchCurvature` / `romPatchFullEvery` | double / int, 7.5 m⁻¹ / 8 | Curvature threshold for local patches and full-correction interval |
+| `romPatchSolver` / `romPatchRelaxation` | token / double, `jacobi` / 0.5 | Local correction method and relaxation |
 
-프로파일 실행기는 검증된 ROM 플래그 조합을 확인합니다. 재료 튜닝 중에는 솔버 설정을 고정하고, 반복 수·시간 간격을 바꾸는 검사는 별도로 수행하십시오. 반복 수나 감쇠 증가만으로 재료가 더 정확해졌다고 판단할 수는 없습니다.
+The profile runner validates supported ROM flag combinations. Keep solver settings fixed while tuning materials, and test iteration counts and time steps separately. More iterations or damping alone do not establish a more accurate material model.
 
-### 원하는 반응에 따른 조절 방법
+### Tuning the desired response
 
-| 원하는 변화 | 우선 조절할 항목 | 함께 확인할 결과 |
+| Desired change | Adjust first | Also inspect |
 | --- | --- | --- |
-| 집기 전 판이 더 단단하게 유지됨 | `smallBend:scale`, `bendingMD/CD` | 자중 처짐, 보강 구간 조건, 파지 접촉력 |
-| 더 쉽게 영구적으로 접힘 | `yieldCurvature` 감소; 보강 종료 곡률 조건 유지 | 최대·누적 소성각, 소산, 압착 후 형상 |
-| 접힌 부분이 더 약해짐 | `damageRate` 증가 또는 `residualStiffness` 감소 | 손상 분포, 판 전체 붕괴 여부, 착지 후 움직임 |
-| 압착 후 모양을 더 유지함 | `smallBend:creaseFrictionCurvature` 증가 | 개방 후 회복량, 추가 압착에 필요한 힘, 접힘 저항 소산 |
-| 그리퍼에서 덜 미끄러짐 | `friction`, `/World/Physics`의 `graspForce`·`liftForce` | 좌우 접촉력, 상승량, 실제 미끄러짐 |
-| 더 깊게 압착함 | `/World/Physics`의 `crushGap` 감소, 필요 시 `crushForce` 증가 | `actual_gap_m`, 접촉력, 영구 변형 |
-| 빠른 진동을 줄임 | `bendingRelaxationTime`, 내부 속도 감쇠 | 감쇠 전후의 동작 속도·처짐·소산, 수치 안정성 |
+| Stiffer panels before grasping | `smallBend:scale`, `bendingMD/CD` | Self-weight sag, reinforcement constraints, grasp contact force |
+| Easier permanent creasing | Lower `yieldCurvature` while preserving the reinforcement end-curvature constraint | Maximum/accumulated plastic angles, dissipation, shape after crushing |
+| Weaker creased regions | Increase `damageRate` or reduce `residualStiffness` | Damage distribution, global panel collapse, post-landing motion |
+| Better shape retention after crushing | Increase `smallBend:creaseFrictionCurvature` | Recovery after release, force required for further crushing, crease-resistance dissipation |
+| Less gripper slip | `friction`, `graspForce` / `liftForce` on `/World/Physics` | Left/right contact forces, lift height, actual slip |
+| Deeper crushing | Reduce `crushGap` on `/World/Physics`; increase `crushForce` if needed | `actual_gap_m`, contact force, permanent deformation |
+| Less rapid vibration | `bendingRelaxationTime`, internal-velocity damping | Motion speed, sag, dissipation, and numerical stability before/after damping changes |
 
-`graspGap`, `crushGap`, `liftHeight`는 미터, `phaseEnds`는 초, `*TiltDegrees`는 도 단위입니다. 그리퍼의 `*Force`는 가상 구동기의 N 기반 명령 매개변수이며 Robotiq 어댑터가 관절 구동 참조로 변환합니다. 실제 접촉력의 상한이나 상용 장비의 정격을 뜻하지 않습니다. `crushGap` 역시 목표값이므로 결과는 CSV의 `actual_gap_m`과 접촉력으로 확인해야 합니다.
+`graspGap`, `crushGap`, and `liftHeight` are in meters, `phaseEnds` in seconds, and `*TiltDegrees` in degrees. Gripper `*Force` values are command parameters in N for the virtual actuator; the Robotiq adapter converts them to joint-drive references. They are not actual contact-force limits or commercial hardware ratings. `crushGap` is also a target, so inspect CSV `actual_gap_m` and contact forces for the achieved response.
 
-### USD 레이어로 튜닝하기
+### Tuning through a USD layer
 
-배포 자산의 체크섬을 유지하면서 값을 바꾸려면 별도 override 레이어와 프로파일을 만듭니다. 다음 예제는 **접힘 회전 저항만 45 → 60 m⁻¹**로 변경합니다.
+To change values while preserving distributed asset checksums, create a separate override layer and profile. The following example changes **only crease rotational-resistance curvature, from 45 to 60 m⁻¹**.
 
 `assets/cardboard_tuned_scene.usda`:
 
@@ -535,7 +537,7 @@ over "World"
 }
 ```
 
-새 프로파일을 만들고 실행합니다. 이 변경은 격자·두께를 유지하므로 기존 ROM basis와 정점 사양을 그대로 사용할 수 있습니다.
+Create and run a new profile. Because this change preserves mesh and thickness, the existing ROM basis and vertex specifications remain usable.
 
 ```bash
 python3 - <<'PYTHON'
@@ -553,26 +555,26 @@ PYTHON
   --replay-directory outputs/cardboard_tuned/run01
 ```
 
-한 번에 한 종류의 계수를 바꾸고 동일한 20초 동작을 비교합니다. 파지·상승·압착·개방·착지에서 실제 간격, 접촉력, 소성각, 소산, 최종 속도를 확인하고 전체 화면과 확대 Replay를 함께 검토하십시오. 재료나 동작을 크게 변경하면 현재 ROM이 표현하는 범위를 벗어날 수 있으므로 전체 VBD 결과와 비교하고 필요한 경우 동일 격자에서 basis를 다시 학습해야 합니다.
+Change one type of coefficient at a time and compare the same 20-second cycle. Inspect actual gap, contact force, plastic angles, dissipation, and final velocity during grasping, lifting, crushing, release, and landing, together with overview and close-up replay. Large material or motion changes can exceed the current ROM's representation range; compare against full VBD and retrain the basis on the same mesh when necessary.
 
-Custom API에 새 속성을 추가할 때에는 [`schemas/cardboard/schema.usda`](schemas/cardboard/schema.usda)를 수정한 뒤 `./scripts/python.sh scripts/generate_schemas.py`로 등록 파일을 재생성합니다. 이어서 USD 작성부, 런타임에서 속성을 읽는 코드, 유효성 검사와 상태 저장을 함께 연결해야 실제 동작에 반영됩니다. 기존 GUI·worker는 재시작해 새 schema 등록을 읽도록 합니다. 새 배포를 준비할 때에는 검증 후 변경한 자산·schema의 입력 체크섬도 갱신합니다.
+To add a custom API property, edit [`schemas/cardboard/schema.usda`](schemas/cardboard/schema.usda) and regenerate registration files with `./scripts/python.sh scripts/generate_schemas.py`. Connect the USD authoring code, runtime property reader, validation, and state export so that the property affects behavior. Restart existing GUI and worker processes to load the new schema registration. Before a new release, validate changes and update input checksums for modified assets and schemas.
 
-## 6. 결과 파일과 영상 생성
+## 6. Outputs and video generation
 
-| 파일 | 내용 |
+| File | Contents |
 | --- | --- |
-| `run_config.json` | 사용한 장면과 솔버 설정 |
-| `effective_scene.usda` | 원본 장면 위에 실제 적용 물성·솔버 설정을 기록한 USD 레이어 |
-| `final_state.usda` | 최종 계산·표시 형상, 강체 자세, 소성·손상·속도·소산 상태 |
-| `parameters.json` | 두께 등 재료 설정 |
-| `state.csv` / `state-<pid>.csv` | 시간, 접촉력, 간격, 소성·속도 등의 프레임별 값 |
-| `trajectory.npz` | 재생용 정점 위치·강체 자세·시각 |
-| `final_material_state.npz` | 최종 형상, 소성각, 손상, 소산 이력 |
-| `performance*.json`, 로그 | 실행 성능과 진단 정보 |
+| `run_config.json` | Scene and solver settings used for the run |
+| `effective_scene.usda` | USD layer authoring effective material and solver settings over the source scene |
+| `final_state.usda` | Final simulation/display geometry, rigid poses, plasticity, damage, velocity, and dissipation state |
+| `parameters.json` | Material settings, including thickness |
+| `state.csv` / `state-<pid>.csv` | Per-frame time, contact force, gap, plasticity, velocity, and other values |
+| `trajectory.npz` | Vertex positions, rigid poses, and timestamps for replay |
+| `final_material_state.npz` | Final geometry, plastic angles, damage, and dissipation history |
+| `performance*.json`, logs | Runtime performance and diagnostics |
 
-`effective_scene.usda`와 `final_state.usda`는 저장소 자산을 상대 경로로 참조합니다. 공유 시 참조 자산과 디렉터리 관계를 함께 유지하십시오. 최종 USD는 표시·재료 상태 스냅샷이며 솔버 내부 승수까지 복원하는 실행 재시작 체크포인트는 아닙니다.
+`effective_scene.usda` and `final_state.usda` reference repository assets through relative paths. Preserve the referenced assets and directory relationships when sharing them. The final USD is a visual/material-state snapshot, not a restart checkpoint that restores internal solver multipliers.
 
-다음 명령은 저장된 궤적을 전체 화면과 상자 확대 화면으로 동시에 렌더링하고, 가로로 배치한 GIF와 MP4를 생성합니다. 입력 기록의 전체 시간을 재생하며 물리 계산은 다시 수행하지 않습니다.
+The following command renders a saved trajectory simultaneously as overview and box-detail views, then encodes side-by-side GIF and MP4 outputs. It replays the complete input duration without rerunning physics.
 
 ```bash
 ./scripts/python.sh scripts/render_replay.py \
@@ -582,41 +584,43 @@ Custom API에 새 속성을 추가할 때에는 [`schemas/cardboard/schema.usda`
   --media-prefix outputs/vertical_pick/vertical-pick-replay
 ```
 
-렌더링에는 Isaac Sim이, 인코딩에는 `ffmpeg`가 필요합니다. MP4의 기본 출력은 **1200 × 522, 15 FPS**이며 `--fps`, `--width`, `--height`로 조절할 수 있습니다. `width`와 `height`는 한 화면의 크기입니다. GIF는 문서 표시용으로 가로 최대 960 px, 최대 10 FPS로 저장합니다.
+Rendering requires Isaac Sim; encoding requires `ffmpeg`. Default MP4 output is **1200 × 522 at 15 FPS**, adjustable with `--fps`, `--width`, and `--height`. Width and height specify each individual view. The documentation GIF is limited to 960 px total width and 10 FPS.
 
-## 7. 저장소 구성
+## 7. Repository layout
 
 ```text
-assets/        로봇·그리퍼·박스 USD, 재료, ROM basis
-config/        실행 프로파일과 입력 자산 체크섬
-src/cardboard/ 물리 모델, 솔버, 동작, 표시 표면
-scripts/       설치 확인, 실행, 기록 렌더링, 분석 도구
-exts/          Isaac Sim 시나리오 조작 패널
-schemas/       USD 물성·동작 스키마
-tests/         물리 모델과 실행 도구의 회귀 검사
-docs/media/    README용 GIF·영상
-third_party/   외부 코드·자산 고지
-outputs/       실행별 결과와 로그
+README.md      English documentation
+README_KR.md   Korean documentation
+assets/        Robot, gripper, and box USD; materials; ROM basis
+config/        Run profiles and input asset checksums
+src/cardboard/ Physics models, solvers, motion, and display surfaces
+scripts/       Installation checks, launchers, replay rendering, and analysis tools
+exts/          Isaac Sim scenario control panel
+schemas/       USD material and scenario schemas
+tests/         Physics and runtime-tool regression tests
+docs/media/    GIFs and videos for the README
+third_party/   Third-party code and asset notices
+outputs/       Per-run results and logs
 ```
 
-## 8. 문제 해결
+## 8. Troubleshooting
 
-| 증상 | 확인 사항 |
+| Symptom | Check |
 | --- | --- |
-| Python 환경을 찾지 못함 | `CARDBOARD_PYTHON`, `CARDBOARD_ISAAC_PYTHON` 또는 로컬 가상환경 경로 |
-| 창이 열리지 않거나 검은 화면 | 데스크톱 세션, `DISPLAY`, GPU 드라이버와 Vulkan/RTX 지원 |
-| 입력 체크섬 불일치 | 해당 파일을 원본과 비교하고 올바른 자산 복구 |
-| ROM / mesh 불일치 | USD의 `cardboard:solver:romBasis`와 계산 격자의 조합 |
-| Custom API가 등록되지 않음 | `scripts/python.sh` 사용 여부와 `schemas/cardboard/resources` 플러그인 경로 |
-| 확대 화면에서 표면이 잘림 | Box detail을 다시 선택해 카메라 위치·회전 기준점·near clip 복원 |
-| Replay 기록을 찾지 못함 | 지정 폴더의 `trajectory.npz`, `state.csv`와 동작 완료 여부 |
-| 기존 출력 경로 오류 | 새 디렉터리 이름을 사용하거나 `--output` 생략 |
-| 처음 실행할 때 시간이 오래 걸림 | Warp 커널 및 렌더링 셰이더 초기화 진행 여부 |
+| Python environment not found | `CARDBOARD_PYTHON`, `CARDBOARD_ISAAC_PYTHON`, or local virtual-environment paths |
+| Window does not open or is black | Desktop session, `DISPLAY`, GPU driver, and Vulkan/RTX support |
+| Input checksum mismatch | Compare the affected file with its original and restore the correct asset |
+| ROM / mesh mismatch | The combination of USD `cardboard:solver:romBasis` and simulation mesh |
+| Custom API not registered | Use of `scripts/python.sh` and the `schemas/cardboard/resources` plugin path |
+| Surfaces clipped in the close-up | Select Box detail again to restore camera position, orbit target, and near clip |
+| Replay recording not found | `trajectory.npz`, `state.csv`, and run completion in the selected directory |
+| Output path already exists | Choose a new directory or omit `--output` |
+| First run takes a long time | Warp kernel and rendering-shader initialization progress |
 
-문제 재현에는 사용한 프로파일, 실행 명령, 환경 버전, 해당 실행의 설정과 로그를 함께 보관하십시오.
+For reproducibility, retain the profile, launch command, environment versions, run configuration, and logs.
 
-## 9. 적용 범위와 라이선스
+## 9. Scope and licensing
 
-박스는 균질화 쉘로 모델링합니다. 골판지 내부의 flute 구조, 층간 박리, 찢어짐, 수분 의존성은 포함하지 않습니다. UR10은 규정된 IK 운동을 따르므로 실제 로봇 제어기나 토크 한계를 검증하는 용도로 사용하지 않습니다. 다른 박스·파지 조건에 적용할 때에는 재료 보정과 접촉·미끄러짐 검증이 필요합니다.
+The box is a homogenized shell. Internal flute geometry, delamination, tearing, and moisture dependence are not included. The UR10 follows prescribed IK motion and is not intended to validate a real robot controller or torque limits. Other boxes and grasp conditions require material calibration and contact/slip validation.
 
-Newton에서 가져온 커널은 원저작권과 Apache-2.0 고지를 유지합니다. 로봇·박스·텍스처 자산에는 각 원본의 이용 조건이 적용됩니다. 자세한 내용은 [외부 코드·자산 고지](third_party/README.md)와 [Newton 라이선스](third_party/newton-LICENSE.md)를 참고하십시오. 프로젝트 자체 코드의 최상위 라이선스는 별도로 지정되어 있지 않습니다.
+Kernels derived from Newton retain their original copyright and Apache-2.0 notices. Robot, box, and texture assets are subject to their original terms. See [third-party code and asset notices](third_party/README.md) and the [Newton license](third_party/newton-LICENSE.md). No top-level license has been separately specified for the project's own code.
