@@ -26,6 +26,7 @@ UR10과 Robotiq 기반 그리퍼가 테이블 위의 종이박스를 집고, 자
 
 - [1. 시나리오](#1-시나리오)
 - [2. 시스템 구성](#2-시스템-구성)
+- [Newton 솔버와 박스 물리 모델](#newton-솔버와-박스-물리-모델)
 - [3. 설치](#3-설치)
 - [4. 실행과 재생](#4-실행과-재생)
 - [5. 설정·Custom schema·반응 튜닝](#5-설정)
@@ -71,6 +72,199 @@ flowchart LR
 - **재생:** 저장된 정점 위치와 강체 자세를 읽어 동일한 장면을 표시합니다. Replay 중에는 물리를 다시 계산하지 않습니다.
 
 기본 적분은 물리 프레임 60 Hz, 프레임당 16서브스텝이며 지지 상태에서는 세분화를 적용합니다. 이 값은 수치 적분 설정이며 화면 FPS나 실제 계산 속도와는 다릅니다.
+
+### Newton 솔버와 박스 물리 모델
+
+현재 수직 동작은 **Newton 1.6.0의 `SolverVBD`를 확장한 `AdaptiveROMVBD`**로 계산합니다. 박스는 삼각형 쉘의 정점 위치를 자유도로 갖고, 그리퍼는 동적 강체·관절로 구성합니다. UR10과 그리퍼 장착부는 IK로 지정한 운동을 따릅니다. Isaac Sim은 계산 결과를 표시하며, 이 장면의 물리를 PhysX와 중복 계산하지 않습니다.
+
+| 계산 구성 | 담당 구현 | 역할 |
+| --- | --- | --- |
+| 기본 적분·쉘 해법 | Newton `SolverVBD` | 암시적 Euler에 기반한 정점 블록 반복, 삼각형 면내 탄성, 이면각 굽힘, 접촉 |
+| 그리퍼 강체·관절 | Newton의 강체 AVBD 경로 + [`RigidScheduleMixin`](src/cardboard/rigid_schedule.py) | 강체의 이동·회전 블록, 관절·구동·접촉 항과 dual 갱신. 현재 `rigidCompliantALM=false`인 Newton 1.6 경로 사용 |
+| 박스 전체 운동 보정 | [`TranslationBlockVBD`](src/cardboard/block_solver.py), [`rotation_block.py`](src/cardboard/rotation_block.py), [`rigid_subspace.py`](src/cardboard/rigid_subspace.py) | 강성이 큰 쉘의 느린 전체 이동·회전 모드를 추가로 보정 |
+| 감소 차원·국소 보정 | [`AdaptiveROMVBD`](src/cardboard/rom_solver.py), [`local_vbd.py`](src/cardboard/local_vbd.py) | rank-8 ROM과 접촉·접힘 주변 VBD, 주기적인 전체 정점 보정 |
+| 재료 이력 | [`plasticity.py`](src/cardboard/plasticity.py), [`small_bend_kernels.py`](src/cardboard/small_bend_kernels.py) | 작은 굽힘 보강, 영구 접힘, 경화·손상, 접힌 힌지의 회전 저항 |
+
+VBD는 정점 단위 블록 좌표 하강법으로 암시적 적분 문제를 푸는 방법입니다. 같은 색으로 분류한 정점들을 병렬 처리하고 색 그룹 사이에는 갱신된 상태를 전달합니다. 일반 알고리즘은 [VBD 논문·프로젝트](https://graphics.cs.utah.edu/research/projects/vbd/)와 [Newton `SolverVBD` 문서](https://newton-physics.github.io/newton/latest/api/_generated/newton.solvers.SolverVBD.html)를 참고하십시오. 아래 식과 설정은 이 저장소의 Newton 1.6 구현에 맞춰 설명합니다.
+
+#### 시간 적분과 정점 보정
+
+한 서브스텝의 탄성·관성 문제는, 재료 이력을 고정했을 때 다음 형태로 쓸 수 있습니다. $x_i$는 정점 위치, $m_i$는 정점 질량, $\Delta t$는 서브스텝 시간이며, $\hat{x}_i$는 이전 위치·속도와 중력 등으로 구성한 관성 목표입니다.
+
+$$
+\Phi(x)=\frac{1}{2\Delta t^2}\sum_i m_i\|x_i-\hat{x}_i\|^2
++\sum_T E_{\mathrm{membrane},T}(x)
++\sum_h E_{\mathrm{bend},h}(x;p_h,d_h).
+$$
+
+실제 반복에는 여기에 강체·자기 접촉, 마찰, 감쇠와 접힘 회전 저항의 힘·국소 Hessian 기여를 더합니다. 정점별로 관성 항을 포함한 $3\times3$ 블록을 구성해 $\Delta x_i=H_i^{-1}f_i$를 계산합니다. 여기서 $f_i$는 음의 에너지 기울기에 대응하는 힘 잔차입니다. 커널은 안정화한 국소 Hessian과 충돌 변위 제한을 사용하며, 정해진 반복 예산 안에서 근사해를 구합니다. 재료 이력은 이 위치 계산 뒤에 별도로 갱신합니다.
+
+| 현재 실행 설정 | 값·의미 |
+| --- | --- |
+| 물리 프레임 | 60 Hz |
+| 일반 상태 | 프레임당 16서브스텝, $\Delta t=1/960$ s |
+| 기본 솔버 예산 | 서브스텝당 24회; ROM·국소·전체 VBD가 이 예산을 나눠 사용 |
+| 소성 변형 후 지지 상태 | 조건 충족 시 32서브스텝, $\Delta t=1/1920$ s; 이동·회전 결합 보정 |
+| 실행 | Warp CUDA 커널, 상태별 CUDA graph 재사용 |
+
+따라서 “24회 반복”은 24번의 전체 격자 VBD 순회를 뜻하지 않습니다. 또한 60 Hz는 시뮬레이션 시간 간격이며, 벽시계 기준 실시간 처리율과 구분됩니다.
+
+#### 면내 탄성: 판면의 늘어남과 전단
+
+박스는 체적 사면체 대신 **두께를 갖는 중립면 쉘**로 모델링합니다. 삼각형 면적과 면밀도로 질량을 구성하고, 두께는 접촉 반경과 굽힘 강성 보정에도 사용합니다. 현재 1,402개 정점의 위치 자유도는 4,206개입니다.
+
+각 삼각형에서 기준 형상 대비 변형 기울기 $F\in\mathbb{R}^{3\times2}$를 구하고, Newton의 stable Neo-Hookean membrane 커널로 면내 힘을 계산합니다. 현재 커널의 탄성 에너지는 상수항을 제외하면 다음과 같습니다.
+
+$$
+E_{\mathrm{membrane},T}=A_T\left[
+\frac{\mu}{2}\bigl(\operatorname{tr}(F^TF)-2\bigr)
++\frac{\tilde{\lambda}}{2}(J_s-a_0)^2\right],
+\quad J_s=\sqrt{\det(F^TF)},
+\quad\tilde{\lambda}=\lambda+\mu,
+\quad a_0=1+\frac{\mu}{\tilde{\lambda}}.
+$$
+
+$A_T$는 기준 면적이고, $\mu$와 $\lambda$는 각각 USD의 `membraneShear`, `membraneArea`에 대응합니다. 현재 값은 14,112와 23,520 N/m입니다. 이 커널은 판면이 쉽게 늘어나거나 면적이 줄어드는 것을 저항합니다. 면내 모델은 등방성이며, 아래의 방향별 굽힘 보정까지 포함해도 완전한 직교이방성 골판지 구성 모델은 아닙니다.
+
+#### 굽힘과 작은 변형에서의 판 강성
+
+두 삼각형이 공유하는 모서리를 힌지로 사용합니다. 힌지 $h$의 현재 이면각을 $\theta_h$, 기준각을 $\theta_h^0$, 영구 소성각을 $p_h$, 모서리 길이를 $\ell_h$, 양쪽 삼각형 높이의 평균인 유효 폭을 $b_h$라 하면 탄성각과 곡률은 다음과 같습니다.
+
+$$
+e_h=\theta_h-\theta_h^0-p_h,
+\qquad \kappa_h=\frac{|e_h|}{b_h}.
+$$
+
+방향별 강성과 두께 보정으로 힌지 계수를 구성합니다.
+
+$$
+D_h=\left[D_{CD}+(D_{MD}-D_{CD})w_h\right]
+\left(\frac{t}{t_{\mathrm{ref}}}\right)^n,
+\quad w_h=\left(\frac{\Delta y_h}{\ell_h}\right)^2,
+\quad K_h^0=D_h\frac{\ell_h}{b_h}.
+$$
+
+현재 런타임은 기준 격자 모서리의 Y 성분으로 $w_h$를 계산합니다. $D_{MD/CD}$는 `bendingMD/CD`, $t$는 두께이며 두께 지수 $n=3$입니다. 손상도 $d_h$를 적용한 기본 굽힘 에너지는 $E_{\mathrm{bend},h}=\tfrac12(1-d_h)K_h^0e_h^2$입니다. 기준각과 소성각을 분리하므로 원래 박스 모서리의 각도와 새로 생긴 접힘을 구분할 수 있습니다.
+
+아직 소성화되지 않은 힌지에는 `smallBend:*` 보강을 추가합니다. $K_h=(1-d_h)K_h^0$, 보강 배율 $s$, 전환 곡률 $\kappa_k$, 종료 곡률 $\kappa_e$일 때 현재 `memoryCurvature=0` 설정의 모멘트 법칙은 다음과 같습니다.
+
+$$
+M_h=\operatorname{sgn}(e_h)K_hb_h
+\begin{cases}
+s\kappa_h,&0\leq\kappa_h\leq\kappa_k,\\
+s\kappa_k+\dfrac{\kappa_e-s\kappa_k}{\kappa_e-\kappa_k}(\kappa_h-\kappa_k),&\kappa_k<\kappa_h<\kappa_e,\\
+\kappa_h,&\kappa_h\geq\kappa_e.
+\end{cases}
+$$
+
+현재 $s=16$, $\kappa_k=0.75$, $\kappa_e=14.75$ m⁻¹입니다. 작은 굽힘에서는 판을 단단하게 유지하고, 항복 곡률 15 m⁻¹에 도달하기 전에 기본 굽힘 법칙으로 돌아갑니다. 첫 소성화 후에는 이 추가 보강을 해제하고 그에 따른 저장 에너지 감소를 소산 이력에 반영합니다. `memoryCurvature`를 양수로 설정하면 누적 소성 곡률에 따라 보강이 점진적으로 감소합니다.
+
+#### 소성 접힘·경화·손상
+
+현재 자산은 `creaseDamageLength > 0`이므로 `return_map_crease` 경로를 사용합니다. 매 서브스텝의 위치 계산 뒤에 힌지별 **return mapping**으로 영구각 $p_h$, 누적 소성각 $\alpha_h$, 손상 $d_h$를 갱신합니다. 다음 식은 코드의 갱신식을 표기한 것입니다.
+
+먼저 이전 누적각에서 손상을 평가합니다. $c_d$는 `damageRate`, $L_d$는 `creaseDamageLength`, $r$은 `residualStiffness`입니다.
+
+$$
+d_h^n=\min\left(1-r,\;1-\exp\left[-c_d\alpha_h^n L_d/b_h\right]\right).
+$$
+
+이전 손상을 고정한 trial 모멘트, 항복 모멘트와 경화 계수는 다음과 같습니다. $\kappa_y$는 `yieldCurvature`, $\eta$는 `hardeningRatio`입니다.
+
+$$
+K_h=(1-d_h^n)K_h^0,\qquad
+Y_h=K_hb_h\kappa_y,\qquad
+H_h=(1-d_h^n)\eta K_h^0,\qquad
+M_h^{\mathrm{trial}}=K_h(\theta_h-\theta_h^0-p_h^n).
+$$
+
+$$
+\Delta\gamma_h=\max\left(0,\frac{|M_h^{\mathrm{trial}}|-Y_h-H_h\alpha_h^n}{K_h+H_h}\right),
+\quad p_h^{n+1}=p_h^n+\operatorname{sgn}(M_h^{\mathrm{trial}})\Delta\gamma_h,
+\quad\alpha_h^{n+1}=\alpha_h^n+\Delta\gamma_h.
+$$
+
+이후 $\alpha_h^{n+1}$로 손상을 다시 계산하고 Newton의 힌지 rest angle을 $\theta_h^0+p_h^{n+1}$로 갱신합니다. 그 결과 하중을 제거해도 복원 기준각 자체가 달라져 영구 접힘이 남습니다. 현재 손상 상한은 $1-r=0.82$이며, 강성과 항복 모멘트가 함께 약화됩니다.
+
+`plasticDissipation`에는 $Y_h\Delta\gamma_h$와 손상으로 해제된 탄성·경화 에너지를 누적합니다. 작은 굽힘 보강 해제에 따른 소산도 별도로 더합니다. 위치 해법과 재료 갱신은 **operator splitting**으로 연결되며, 소성 상태까지 하나의 전역 Newton 반복으로 동시에 푸는 구성은 아닙니다. `creaseDamageLength`는 국소 손상 법칙의 길이 척도이고, 균열 에너지나 격자 독립적인 파괴를 보장하는 비국소 모델은 아닙니다.
+
+#### 접힌 뒤의 회전 저항과 형상 유지
+
+소성각은 복원 기준을 바꾸지만, 그것만으로 접힌 판의 이후 움직임이 멈추지는 않습니다. 이 구현은 누적 소성 이력이 있는 힌지에 추가 회전 저항을 적용합니다. 현재 손상을 반영한 $K_h$, 이전 누적각 $\alpha_h$와 `creaseFrictionCurvature` $\kappa_f$로 모멘트 한계를 정합니다.
+
+$$
+M_{h,\max}=K_hb_h\kappa_f
+\left(1-e^{-\alpha_h/(b_h\kappa_a)}\right),
+\qquad \kappa_a=5\ \mathrm{m}^{-1},\qquad \kappa_f=45\ \mathrm{m}^{-1}.
+$$
+
+직전 서브스텝 대비 이면각 변화 $\Delta\theta_h$에 대해, 저항 모멘트는 작은 변화에서 선형이고 그 밖에서는 크기가 $M_{h,\max}$로 제한되는 Huber 정규화 법칙을 사용합니다. 선형 구간의 폭은 $\varepsilon_\theta=\Delta t\times(0.005\ \mathrm{rad/s})$입니다. 모멘트는 각도 변화에 반대 방향으로 작용하며, 계산한 일은 `creaseFrictionWork`에 누적합니다.
+
+이 항은 그리퍼 개방 시점이나 특정 프레임에 맞춘 형상 고정이 아닙니다. 현재 형상 변화와 소성 이력으로 매번 계산하며 소성각을 초기화하지 않습니다. 접촉면의 Coulomb 마찰과도 별개의 힌지 회전 저항입니다.
+
+#### 파지·낙하·자기 접촉
+
+그리퍼와 박스 사이에는 별도의 부착 제약이 없습니다. 손가락의 압착에 의한 법선 반력과 접선 마찰로 박스를 지지합니다. 그리퍼를 열어 접촉이 사라지면 박스는 중력·관성에 따라 떨어지고, 테이블 접촉을 통해 지지됩니다.
+
+- **강체–쉘 접촉:** Newton collision pipeline이 생성한 정점·모서리·면 접촉을 사용합니다. 모서리·면 접촉은 barycentric 가중치로 계산 정점에 분배하고, 동적 그리퍼에는 반대 방향 반력을 반영합니다. 접촉 강성·감쇠와 정규화된 마찰을 포함하므로 유한한 접촉 변형이 존재할 수 있습니다.
+- **자기 접촉:** 정점–삼각형과 모서리–모서리 후보를 검사합니다. 프로젝트 코드는 유효 쌍을 GPU 배열로 압축해 평가하고 Newton의 변위 절단 경로를 유지합니다. 4 mm 두께의 접촉 거리와 기준 형상 인접쌍 제외를 사용하며, 표시 격자의 세밀한 표면 전체를 충돌 형상으로 계산하지는 않습니다.
+- **강체 반복:** 박스와 그리퍼의 위치·접촉을 반복적으로 연결합니다. `guarded` 스케줄은 강체별 활성 접촉을 처리하는 GPU 작업 배치를 조절하며, 접촉 마찰계수나 재료 법칙을 바꾸지 않습니다.
+
+고정 반복 수, 접촉 허용 거리, 근사 형상과 충돌 갱신 주기를 사용하므로 모든 조건에서 관통이 완전히 없다고 보장하지 않습니다. 또한 규정 운동을 따르는 UR10은 접촉 반력에 따라 자유롭게 밀려나는 실제 로봇 제어기 모델과 구분됩니다.
+
+#### ROM·국소 VBD·전체 운동 보정
+
+ROM은 계산된 접힘 애니메이션을 재생하는 기능이 아닙니다. 현재 정점 위치·접촉력·소성 상태에서 힘과 국소 Hessian을 계산하고, 그 **보정 방향**만 저차원 공간에서 구합니다. rank-8 basis $U\in\mathbb{R}^{4206\times8}$는 세 개의 평행이동 모드와 학습 궤적의 중심 이동을 제거한 증분에서 얻은 다섯 POD 모드로 구성됩니다.
+
+$$
+(U^TDU)\Delta z=U^Tf,\qquad \Delta x=U\Delta z,
+\qquad D=\operatorname{blockdiag}(H_1,\ldots,H_N).
+$$
+
+$D$는 정점별 $3\times3$ 블록을 모은 근사 행렬입니다. 따라서 이 식은 전체 연결 Hessian을 정확하게 투영한 해법이 아니라 **투영된 quasi-Newton 보정**입니다. 정점 위치 자체와 소성 이력은 전체 계산 격자에 유지되며, ROM 공간으로 상태를 강제로 투영하지 않습니다.
+
+현재 24회 반복의 구성은 다음과 같습니다.
+
+| 단계 | 적용 방식 |
+| --- | --- |
+| 홀수 번째 반복 | ROM 보정. 유한값·양의 Cholesky 피벗·basis 표현 오차를 확인하고 보정 크기를 제한 |
+| 짝수 번째 반복 | VBD 보정. 접촉·자기 접촉·소성 이력·큰 곡률의 정점과 한 겹 이웃을 우선 처리 |
+| 8·16·24번째 반복 | 국소 선택을 해제한 전체 정점 VBD 순회 |
+| 국소 VBD | Jacobi 갱신, 완화 계수 0.5 |
+| 내부 요소 평가 | ROM 힘 계산에서 초기 대표 요소 비율 0.25; 소성 이력이 생기면 전체 요소 평가로 전환 |
+| 접촉·관성·재료 이력 | 대표 내부 요소 선택과 별개로 전체 격자에서 처리 |
+
+ROM trial 보정은 최대 정점 이동을 0.1 mm로 제한한 뒤 충돌 변위 제한을 적용합니다. 현재 `romTolerance=1.0`, `romCheckResidual=false`, `romDeferFallback=true`이므로 추가 residual 감소 검사는 하지 않으며, 거부한 ROM 보정은 건너뛰고 다음 예약 VBD 보정으로 넘깁니다. **`schedule=guarded`라는 이름은 이 residual 검사가 활성화되었다는 뜻이 아닙니다.** 새로운 하중·재료·격자에 대한 정확도는 반복 수와 전체 VBD 결과를 비교해 확인해야 합니다.
+
+VBD 보정 뒤에는 박스 전체의 공통 이동·회전을 추가로 풉니다. 일반 상태에서는 이동과 회전을 순차 보정하고, 지지 상태에서는 결합된 6자유도 강체 부분공간 보정을 사용합니다. 공통 강체 변환은 쉘의 변형률·이면각·소성 이력을 보존하면서 관성·외부 접촉에 대한 수렴을 돕습니다. 이 보정이 박스를 강체로 바꾸거나 외부에 고정하는 것은 아닙니다.
+
+#### 감쇠·정지 판정과 서브스텝 흐름
+
+삼각형의 면내 감쇠는 변형 metric의 변화, 굽힘 감쇠는 이면각 변화에 작용합니다. 별도의 내부 속도 감쇠는 질량 가중 강체 속도 $v_i^{\mathrm{rigid}}$를 구한 뒤 비강체 성분만 지수적으로 줄입니다.
+
+$$
+v_i'=v_i^{\mathrm{rigid}}+e^{-c\Delta t}(v_i-v_i^{\mathrm{rigid}}).
+$$
+
+이 내부 감쇠는 전체 이동·회전을 가능한 한 보존합니다. 지지 상태에서는 `supportedRigidDamping`에 따른 추가 감쇠가 적용되어 전체 운동량도 감소할 수 있습니다.
+
+착지 후에는 지지점 분포, 질량중심 위치, 외부 접촉·하중 변화를 확인합니다. 기본 정지 조건은 0.25초 동안 모든 정점의 이동 폭이 0.5 mm 이하이고 최대 속도가 20 mm/s 이하인 상태입니다. 조건을 만족하면 쉘 속도를 0으로 하고 형상·소성 이력을 유지하며, 새 하중이나 접근 접촉이 감지되면 다시 계산합니다. 따라서 정지 후 속도 0은 수치적 sleep 상태도 포함하며, 정확한 정적 평형을 증명하는 지표는 아닙니다. 구현은 [`internal_damping.py`](src/cardboard/internal_damping.py)와 [`resting.py`](src/cardboard/resting.py)에 있습니다.
+
+깨어 있는 박스의 프레임·서브스텝 계산 순서는 다음과 같습니다.
+
+```mermaid
+flowchart TD
+    A[프레임: 동작 목표·중력·지지 상태 갱신] --> B[서브스텝: UR 자세 보간·그리퍼 구동]
+    B --> C[Newton 충돌 후보 생성]
+    C --> D[ROM / VBD · 강체 접촉·관절 반복]
+    D --> E[접힘 저항 소산 기록·내부 속도 감쇠]
+    E --> F[힌지 return mapping: 소성각·손상·rest angle 갱신]
+    F --> G[입출력 상태 교환]
+    G -->|다음 서브스텝| B
+    G -->|프레임 완료| H[보강 해제 소산 집계·진단·USD/Replay 표시]
+```
+
+이 모델이 재현하는 범위는 **판면의 탄성 변형, 방향별 굽힘, 접촉 파지·미끄러짐, 국소 영구 접힘·약화, 압착 후 회복과 접힘 유지, 중력 낙하·착지**입니다. 균질화 쉘이므로 골 내부의 세부 압궤, 층간 박리, 찢어짐, 수분 효과는 포함하지 않습니다. 재료 계수는 예시 모델이며, 실제 골판지의 하중–변위 곡선과 반복 접힘 시험에 대한 보정은 별도로 필요합니다.
 
 ### SimReady 자산과 Newton 연결
 
