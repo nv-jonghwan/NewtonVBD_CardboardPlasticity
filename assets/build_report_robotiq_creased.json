@@ -1,0 +1,19 @@
+{
+  "source": "assets/demo_scene_robotiq_fine24.usda",
+  "scene": "assets/demo_scene_robotiq_creased.usda",
+  "material_overrides": {
+    "yieldCurvature": 4.0,
+    "hardeningRatio": 0.01,
+    "damageRate": 4.0,
+    "residualStiffness": 0.18,
+    "creaseDamageLength": 0.02,
+    "bendingRelaxationTime": 0.02
+  },
+  "iterations": 32,
+  "substeps": 32,
+  "visual_crease_degrees": 80.0,
+  "visual_transition_degrees": 40.0,
+  "drive_damping": 160.0,
+  "pinch_damping": 160.0,
+  "qualification": "Illustrative local crease softening; intact stiffness, membrane, thickness, mass and topology unchanged. Not calibrated or nonlocal fracture regularization."
+}

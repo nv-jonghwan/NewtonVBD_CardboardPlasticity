@@ -1,0 +1,17 @@
+#usda 1.0
+(
+    metersPerUnit = 1
+    subLayers = [@demo_scene_robotiq_board4_flat_panels.usda@]
+    upAxis = "Z"
+)
+
+over "World"
+{
+    over "Physics"
+    {
+        float3 cardboard:graspTiltDegrees = (0, 0, 0)
+        float3 cardboard:liftTiltDegrees = (0, 0, 0)
+        float3 cardboard:crushTiltDegrees = (0, 0, 0)
+        float3 cardboard:releaseTiltDegrees = (0, 0, 0)
+    }
+}

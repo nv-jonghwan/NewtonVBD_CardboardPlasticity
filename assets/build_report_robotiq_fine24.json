@@ -1,0 +1,17 @@
+{
+  "scene": "assets/demo_scene_robotiq_fine24.usda",
+  "asset": "assets/cardboard_robotiq_fine24.usda",
+  "panel_subdivisions": 24,
+  "simulation_vertices": 3458,
+  "physics_triangles": 6912,
+  "hinges": 10368,
+  "render_vertices": 521280,
+  "render_triangles": 173760,
+  "render_max_edge_m": 0.006,
+  "iterations": 16,
+  "substeps": 64,
+  "source_scene": "assets/demo_scene_robotiq_coarse_preserved.usda",
+  "source_asset": "assets/cardboard_board15_half.usda",
+  "qualification": "Same material and outer source appearance; fresh physics required for new topology.",
+  "self_contact_rest_exclusion_m": 0.015010000206530094
+}

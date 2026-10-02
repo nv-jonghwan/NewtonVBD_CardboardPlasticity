@@ -1,0 +1,40 @@
+{
+  "scene": "assets/demo_scene_robotiq_board4_vertical.usda",
+  "schedule": "guarded",
+  "iterations": 24,
+  "rom": {
+    "basis": "assets/models/board4_rank8.npz",
+    "tolerance": 1.0,
+    "full_every": 2,
+    "start_with_rom": true,
+    "check_residual": false,
+    "defer_fallback": true,
+    "element_fraction": 0.25,
+    "local_vbd": true,
+    "patch_rings": 1,
+    "patch_curvature": 7.5,
+    "patch_full_every": 8,
+    "patch_solver": "jacobi",
+    "patch_relaxation": 0.5,
+    "element_full_after_yield": true
+  },
+  "small_bend": {
+    "scale": 16.0,
+    "knee": 0.75,
+    "end": 14.75,
+    "memory_curvature": 0.0,
+    "crease_friction_curvature": 45.0
+  },
+  "schema_version": 1,
+  "name": "board4-crease45-vertical",
+  "status": "vertical-motion-trial",
+  "duration_s": 20.0,
+  "device": "cuda:0",
+  "expected": {
+    "vertices": 1402,
+    "triangles": 2800,
+    "hinges": 4200,
+    "thickness_m": 0.004,
+    "basis_rank": 8
+  }
+}

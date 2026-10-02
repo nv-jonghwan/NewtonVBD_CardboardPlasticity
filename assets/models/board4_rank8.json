@@ -1,0 +1,15 @@
+{
+  "rank": 8,
+  "physical_dofs": 4206,
+  "captured_centered_increment_energy": 0.8877373414838032,
+  "training": [
+    {
+      "path": "outputs/graded_board4/graded48/trajectory.npz",
+      "sha256": "e72b607a4dff4132691da8bdd9247b95fd5410b0d140b7bdcc9e11008f4eb413"
+    }
+  ],
+  "basis_sha256": "56a10990b18686d20e3b11e94c72614d053c95e9487eaf1b614199054397c70f",
+  "method": "3 translation modes + POD of centered physical increments; Euclidean orthonormal; no trajectory playback",
+  "training_included_in_release": false,
+  "qualification": "Training path is provenance only; inference uses the packaged basis. Re-training requires the original or newly generated training trajectories."
+}

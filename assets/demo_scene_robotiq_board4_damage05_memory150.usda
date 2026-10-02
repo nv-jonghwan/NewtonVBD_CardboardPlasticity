@@ -1,0 +1,23 @@
+#usda 1.0
+(
+    metersPerUnit = 1
+    subLayers = [
+        @demo_scene_robotiq_board4_flat_panels.usda@
+    ]
+    upAxis = "Z"
+)
+
+over "World"
+{
+    over "Box"
+    {
+        over "Materials"
+        {
+            over "Cardboard"
+            {
+                float cardboard:damageRate = 0.5
+            }
+        }
+    }
+}
+

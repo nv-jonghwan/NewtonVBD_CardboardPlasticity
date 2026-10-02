@@ -1,0 +1,668 @@
+#usda 1.0
+(
+    defaultPrim = "World"
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "World"
+{
+    def PhysicsScene "Physics" (
+        prepend apiSchemas = ["CardboardDemoAPI", "CardboardScenarioAPI"]
+    )
+    {
+        float cardboard:approachClearance = 0.2
+        rel cardboard:box = </World/Box>
+        float cardboard:contactDamping = 0.9
+        float cardboard:contactStiffness = 180000
+        float cardboard:crushForce = 800
+        float cardboard:crushGap = 0.14
+        float cardboard:crushRampFraction = 0.65
+        float cardboard:duration = 11
+        rel cardboard:fingerJoints = [
+            </World/Gripper/finger_joint>,
+            </World/Gripper/right_outer_knuckle_joint>,
+        ]
+        float cardboard:fingerPositionStiffness = 32000
+        float cardboard:fingerVelocityDamping = 180
+        float cardboard:fps = 60
+        float cardboard:graspForce = 100
+        float cardboard:graspGap = 0.255
+        float cardboard:gravityRampSeconds = 1
+        custom string cardboard:gripperModel = "robotiq_scaled"
+        custom float cardboard:gripperScale = 2.3
+        float3 cardboard:homeOffset = (-0.22, 0, 0.24)
+        int cardboard:iterations = 12
+        bool cardboard:kinematicArm = 1
+        float cardboard:liftHeight = 0.12
+        float cardboard:maxFingerForce = 30
+        float cardboard:maxWristTorque = 2
+        float cardboard:minimumGap = 0.16
+        float cardboard:openGap = 0.322
+        float[] cardboard:phaseEnds = [1, 3, 5, 7, 9, 12, 13, 16]
+        bool cardboard:precomputeCommands = 1
+        bool cardboard:realtimePacing = 0
+        float cardboard:releaseRampFraction = 0.25
+        bool cardboard:rigidCompliantALM = 0
+        rel cardboard:robot = </World/UR10>
+        int cardboard:substeps = 16
+        custom float cardboard:toolReach = 0.416
+        bool cardboard:translationBlockSolve = 1
+        float cardboard:twistRadians = 0.12
+        vector3f physics:gravityDirection = (0, 0, -1)
+        float physics:gravityMagnitude = 9.81
+    }
+
+    def Xform "Box" (
+        prepend references = @./cardboard_board15_half.usda@
+    )
+    {
+        double3 xformOp:translate = (0.32, 0, 0.7520854188524186)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    def Cube "Table" (
+        prepend apiSchemas = ["PhysicsCollisionAPI"]
+    )
+    {
+        color3f[] primvars:displayColor = [(0.16, 0.2, 0.24)]
+        double size = 1
+        float3 xformOp:scale = (1.8, 1, 0.08)
+        double3 xformOp:translate = (0.12, 0, 0.61)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Cube "Leg0" (
+        prepend apiSchemas = ["PhysicsCollisionAPI"]
+    )
+    {
+        color3f[] primvars:displayColor = [(0.1, 0.12, 0.14)]
+        double size = 1
+        float3 xformOp:scale = (0.07, 0.07, 0.57)
+        double3 xformOp:translate = (-0.62, -0.4, 0.285)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Cube "Leg1" (
+        prepend apiSchemas = ["PhysicsCollisionAPI"]
+    )
+    {
+        color3f[] primvars:displayColor = [(0.1, 0.12, 0.14)]
+        double size = 1
+        float3 xformOp:scale = (0.07, 0.07, 0.57)
+        double3 xformOp:translate = (0.86, -0.4, 0.285)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Cube "Leg2" (
+        prepend apiSchemas = ["PhysicsCollisionAPI"]
+    )
+    {
+        color3f[] primvars:displayColor = [(0.1, 0.12, 0.14)]
+        double size = 1
+        float3 xformOp:scale = (0.07, 0.07, 0.57)
+        double3 xformOp:translate = (-0.62, 0.4, 0.285)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Cube "Leg3" (
+        prepend apiSchemas = ["PhysicsCollisionAPI"]
+    )
+    {
+        color3f[] primvars:displayColor = [(0.1, 0.12, 0.14)]
+        double size = 1
+        float3 xformOp:scale = (0.07, 0.07, 0.57)
+        double3 xformOp:translate = (0.86, 0.4, 0.285)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Cube "Floor" (
+        prepend apiSchemas = ["PhysicsCollisionAPI"]
+    )
+    {
+        color3f[] primvars:displayColor = [(0.08, 0.1, 0.12)]
+        double size = 1
+        float3 xformOp:scale = (5, 5, 0.05)
+        double3 xformOp:translate = (0, 0, -0.03)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Xform "UR10" (
+        prepend references = @./source/ur10/ur10.usd@
+    )
+    {
+        double3 xformOp:translate:placement = (-0.46, 0, 0.65)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale", "xformOp:translate:placement"]
+
+        over "ee_link" (
+            prepend apiSchemas = ["PhysicsMassAPI"]
+        )
+        {
+            float3 physics:diagonalInertia = (0.00005, 0.00005, 0.00005)
+            float physics:mass = 0.05
+        }
+    }
+
+    def Xform "Gripper" (
+        customData = {
+            string qualification = "Hypothetical Robotiq 2F140 2.3x; constant-density mass and inertia scaling; virtual drives; not a qualified UR10 payload."
+        }
+    )
+    {
+        def Xform "left_outer_knuckle" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+        )
+        {
+            point3f physics:centerOfMass = (-0.121655665, 0.12232177, -5.0452525e-18)
+            float3 physics:diagonalInertia = (0.000013716277, 0.000043344833, 0.000048375605)
+            float physics:mass = 0.11148979
+            quatf physics:principalAxes = (0, 0, 0, 0)
+            matrix4d xformOp:transform = ( (-1.4479844567678659e-13, -1, 1.3147789673687955e-15, 0), (-1, 1.4485395682801784e-13, -5.3109488885949886e-17, 0), (5.310948888575967e-17, -1.370290118600061e-15, -1, 0), (0.6998566000124359, 0.25614000000008913, 0.6616000000000002, 1) )
+            uniform token[] xformOpOrder = ["xformOp:transform"]
+
+            def Xform "Geometry" (
+                apiSchemas = ["PhysicsMeshCollisionAPI"]
+                instanceable = false
+                prepend references = @./source/robotiq_2f140/Robotiq_2F_140_physics_edit.usd@</Robotiq_2F_140/left_outer_knuckle>
+            )
+            {
+                float3 xformOp:scale = (2.3, 2.3, 2.3)
+                uniform token[] xformOpOrder = ["xformOp:scale"]
+
+                over "Finger1_01" (
+                    active = false
+                )
+                {
+                }
+
+                over "Finger1" (
+                    prepend apiSchemas = ["PhysicsCollisionAPI", "PhysicsMeshCollisionAPI"]
+                )
+                {
+                    uniform token physics:approximation = "convexHull"
+                }
+            }
+        }
+
+        def Xform "left_outer_finger" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+        )
+        {
+            point3f physics:centerOfMass = (-0.17642844, 0.1945172, 0.000007047764)
+            float3 physics:diagonalInertia = (0.00043868116, 0.003446175, 0.003705364)
+            float physics:mass = 0.9376408
+            quatf physics:principalAxes = (0.6106747, 0.6106747, -0.35647783, -0.35647783)
+            matrix4d xformOp:transform = ( (4.2684164152985414e-11, -1, 1.1621233014922427e-15, 0), (-1, -4.268410864183418e-11, -2.335207303303459e-16, 0), (2.335207303799502e-16, -1.217634452713533e-15, -1, 0), (0.6998566000180798, 0.2561400000084079, 0.6616000000000002, 1) )
+            uniform token[] xformOpOrder = ["xformOp:transform"]
+
+            def Xform "Geometry" (
+                apiSchemas = ["PhysicsMeshCollisionAPI"]
+                instanceable = false
+                prepend references = @./source/robotiq_2f140/Robotiq_2F_140_physics_edit.usd@</Robotiq_2F_140/left_outer_finger>
+            )
+            {
+                float3 xformOp:scale = (2.3, 2.3, 2.3)
+                uniform token[] xformOpOrder = ["xformOp:scale"]
+
+                over "Finger2_01" (
+                    active = false
+                )
+                {
+                }
+
+                over "Finger2" (
+                    prepend apiSchemas = ["PhysicsCollisionAPI", "PhysicsMeshCollisionAPI"]
+                )
+                {
+                    uniform token physics:approximation = "convexHull"
+                }
+            }
+        }
+
+        def Xform "Left" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+        )
+        {
+            point3f physics:centerOfMass = (0.370047, 0.18740399, -0.0000034000839)
+            float3 physics:diagonalInertia = (0.0001963791, 0.0012302714, 0.0011025234)
+            float physics:mass = 0.6063349
+            quatf physics:principalAxes = (0.9941523, -0.00084205647, 0.00047910627, -0.1079824)
+            matrix4d xformOp:transform = ( (-1, 1.918967193599552e-16, -2.220446049250313e-16, 0), (1.3638556812869733e-16, 1, 2.407501130378878e-16, 0), (2.220446049250313e-16, 1.8523896180662994e-16, -1, 0), (0.6992999999999999, 0.25614, 0.6616, 1) )
+            uniform token[] xformOpOrder = ["xformOp:transform"]
+
+            def Xform "Geometry" (
+                apiSchemas = None
+                instanceable = false
+                prepend references = @./source/robotiq_2f140/Robotiq_2F_140_physics_edit.usd@</Robotiq_2F_140/left_inner_finger>
+            )
+            {
+                float3 xformOp:scale = (2.3, 2.3, 2.3)
+                uniform token[] xformOpOrder = ["xformOp:scale"]
+
+                over "Fingertip_01" (
+                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                    instanceable = false
+                )
+                {
+                    rel material:binding:physics = </World/Gripper/RubberPhysics>
+
+                    over "Fingertip" (
+                        prepend apiSchemas = ["PhysicsCollisionAPI", "PhysicsMeshCollisionAPI"]
+                    )
+                    {
+                        uniform token physics:approximation = "convexHull"
+                    }
+                }
+
+                over "Finger4_01" (
+                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                    instanceable = false
+                )
+                {
+                    over "Finger4" (
+                        prepend apiSchemas = ["PhysicsCollisionAPI", "PhysicsMeshCollisionAPI"]
+                    )
+                    {
+                        uniform token physics:approximation = "convexHull"
+                    }
+                }
+            }
+        }
+
+        def Xform "left_inner_knuckle" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+        )
+        {
+            point3f physics:centerOfMass = (-0.11099335, 0.2323269, -1.05645785e-8)
+            float3 physics:diagonalInertia = (0.00047053743, 0.002921089, 0.0032884763)
+            float physics:mass = 0.82872134
+            quatf physics:principalAxes = (0.63864726, -0.64404196, 0.29877865, -0.29676738)
+            matrix4d xformOp:transform = ( (2.527053805634476e-11, -1.0000000000000002, 1.4518954236401717e-15, 0), (-1.0000000000000002, -2.5270482545193528e-11, 1.1627299603370902e-15, 0), (-1.1627299603003999e-15, -1.5074065749008124e-15, -1, 0), (0.6998566000131747, 0.25614000000344, 0.6616, 1) )
+            uniform token[] xformOpOrder = ["xformOp:transform"]
+
+            def Xform "Geometry" (
+                apiSchemas = ["MaterialBindingAPI", "PhysicsMeshCollisionAPI"]
+                instanceable = false
+                prepend references = @./source/robotiq_2f140/Robotiq_2F_140_physics_edit.usd@</Robotiq_2F_140/left_inner_knuckle>
+            )
+            {
+                rel material:binding:physics = </World/Gripper/RubberPhysics>
+                float3 xformOp:scale = (2.3, 2.3, 2.3)
+                uniform token[] xformOpOrder = ["xformOp:scale"]
+
+                over "Finger3_01" (
+                    active = false
+                )
+                {
+                }
+
+                over "Finger3" (
+                    prepend apiSchemas = ["PhysicsCollisionAPI", "PhysicsMeshCollisionAPI"]
+                )
+                {
+                    uniform token physics:approximation = "convexHull"
+                }
+            }
+        }
+
+        def Xform "right_outer_knuckle" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+        )
+        {
+            point3f physics:centerOfMass = (-0.121655665, 0.12232177, -5.0452525e-18)
+            float3 physics:diagonalInertia = (0.000013716277, 0.000043344833, 0.000048375605)
+            float physics:mass = 0.11148979
+            quatf physics:principalAxes = (0, 0, 0, 0)
+            matrix4d xformOp:transform = ( (5.68750069125448e-15, 1, -1.4198246774681531e-15, 0), (-1, 5.743011842485738e-15, 1.0843743106893788e-15, 0), (1.0843743106893868e-15, 1.4753358286994044e-15, 1, 0), (0.6998566000124469, 0.2561400000001075, 0.6615999999999997, 1) )
+            uniform token[] xformOpOrder = ["xformOp:transform"]
+
+            def Xform "Geometry" (
+                apiSchemas = ["PhysicsMeshCollisionAPI"]
+                instanceable = false
+                prepend references = @./source/robotiq_2f140/Robotiq_2F_140_physics_edit.usd@</Robotiq_2F_140/right_outer_knuckle>
+            )
+            {
+                float3 xformOp:scale = (2.3, 2.3, 2.3)
+                uniform token[] xformOpOrder = ["xformOp:scale"]
+
+                over "Finger1_01" (
+                    active = false
+                )
+                {
+                }
+
+                over "Finger1" (
+                    prepend apiSchemas = ["PhysicsCollisionAPI", "PhysicsMeshCollisionAPI"]
+                )
+                {
+                    uniform token physics:approximation = "convexHull"
+                }
+            }
+        }
+
+        def Xform "right_outer_finger" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+        )
+        {
+            point3f physics:centerOfMass = (-0.17642844, 0.1945172, 0.000007047764)
+            float3 physics:diagonalInertia = (0.00043868116, 0.003446175, 0.003705364)
+            float physics:mass = 0.9376408
+            quatf physics:principalAxes = (0.6106747, 0.6106747, -0.35647783, -0.35647783)
+            matrix4d xformOp:transform = ( (4.264646729667949e-11, 1, -1.415380356426948e-15, 0), (-1, 4.2646633830133186e-11, 1.0888186317240199e-15, 0), (1.0888186317843811e-15, 1.4708915076117714e-15, 1, 0), (0.6998566000180612, 0.25613999999181325, 0.6615999999999997, 1) )
+            uniform token[] xformOpOrder = ["xformOp:transform"]
+
+            def Xform "Geometry" (
+                apiSchemas = ["PhysicsMeshCollisionAPI"]
+                instanceable = false
+                prepend references = @./source/robotiq_2f140/Robotiq_2F_140_physics_edit.usd@</Robotiq_2F_140/right_outer_finger>
+            )
+            {
+                float3 xformOp:scale = (2.3, 2.3, 2.3)
+                uniform token[] xformOpOrder = ["xformOp:scale"]
+
+                over "Finger2_01" (
+                    active = false
+                )
+                {
+                }
+
+                over "Finger2" (
+                    prepend apiSchemas = ["PhysicsCollisionAPI", "PhysicsMeshCollisionAPI"]
+                )
+                {
+                    uniform token physics:approximation = "convexHull"
+                }
+            }
+        }
+
+        def Xform "Right" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+        )
+        {
+            point3f physics:centerOfMass = (0.37004295, -0.18739744, -0.0000034000839)
+            float3 physics:diagonalInertia = (0.0001963791, 0.0012302714, 0.0011025234)
+            float physics:mass = 0.6063349
+            quatf physics:principalAxes = (0.9941524, -0.0007198045, 0.00064511795, 0.107981525)
+            matrix4d xformOp:transform = ( (-1, 1.918967193599552e-16, -2.220446049250313e-16, 0), (1.3638556812869733e-16, 1, 2.407501130378878e-16, 0), (2.220446049250313e-16, 1.8523896180662994e-16, -1, 0), (0.6992999999999999, 0.25614, 0.6616, 1) )
+            uniform token[] xformOpOrder = ["xformOp:transform"]
+
+            def Xform "Geometry" (
+                apiSchemas = None
+                instanceable = false
+                prepend references = @./source/robotiq_2f140/Robotiq_2F_140_physics_edit.usd@</Robotiq_2F_140/right_inner_finger>
+            )
+            {
+                float3 xformOp:scale = (2.3, 2.3, 2.3)
+                uniform token[] xformOpOrder = ["xformOp:scale"]
+
+                over "Finger4_01" (
+                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                    instanceable = false
+                )
+                {
+                    over "Finger4" (
+                        prepend apiSchemas = ["PhysicsCollisionAPI", "PhysicsMeshCollisionAPI"]
+                    )
+                    {
+                        uniform token physics:approximation = "convexHull"
+                    }
+                }
+
+                over "Fingertip_01" (
+                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                    instanceable = false
+                )
+                {
+                    rel material:binding:physics = </World/Gripper/RubberPhysics>
+
+                    over "Fingertip" (
+                        prepend apiSchemas = ["PhysicsCollisionAPI", "PhysicsMeshCollisionAPI"]
+                    )
+                    {
+                        uniform token physics:approximation = "convexHull"
+                    }
+                }
+            }
+        }
+
+        def Xform "right_inner_knuckle" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+        )
+        {
+            point3f physics:centerOfMass = (-0.11099335, 0.2323269, -1.05645785e-8)
+            float3 physics:diagonalInertia = (0.00047053743, 0.002921089, 0.0032884763)
+            float physics:mass = 0.82872134
+            quatf physics:principalAxes = (0.63864726, -0.64404196, 0.29877865, -0.29676738)
+            matrix4d xformOp:transform = ( (2.5150240607006725e-11, 1, 3.905937364589745e-16, 0), (-1, 2.515040714046042e-11, 3.826447907324256e-16, 0), (3.8264479072260203e-16, -3.3508258523734043e-16, 1, 0), (0.6998566000131804, 0.25613999999678055, 0.6616, 1) )
+            uniform token[] xformOpOrder = ["xformOp:transform"]
+
+            def Xform "Geometry" (
+                apiSchemas = ["MaterialBindingAPI", "PhysicsMeshCollisionAPI"]
+                instanceable = false
+                prepend references = @./source/robotiq_2f140/Robotiq_2F_140_physics_edit.usd@</Robotiq_2F_140/right_inner_knuckle>
+            )
+            {
+                rel material:binding:physics = </World/Gripper/RubberPhysics>
+                float3 xformOp:scale = (2.3, 2.3, 2.3)
+                uniform token[] xformOpOrder = ["xformOp:scale"]
+
+                over "Finger3_01" (
+                    active = false
+                )
+                {
+                }
+
+                over "Finger3" (
+                    prepend apiSchemas = ["PhysicsCollisionAPI", "PhysicsMeshCollisionAPI"]
+                )
+                {
+                    uniform token physics:approximation = "convexHull"
+                }
+            }
+        }
+
+        def Xform "Palm" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+        )
+        {
+            point3f physics:centerOfMass = (0, 0, 0.092)
+            float3 physics:diagonalInertia = (0.03861806, 0.03861806, 0.032181717)
+            float physics:mass = 7.90855
+            quatf physics:principalAxes = (1, 0, 0, 0)
+            matrix4d xformOp:transform = ( (2.465190328815662e-32, 3.3306690738754696e-16, -1, 0), (-1.1102230246251565e-16, -1, -3.885780586188048e-16, 0), (-1, 1.6653345369377348e-16, -4.1654372921758286e-49, 0), (0.6992999999999999, 0.25614, 0.6616, 1) )
+            uniform token[] xformOpOrder = ["xformOp:transform"]
+
+            def Xform "Geometry" (
+                apiSchemas = None
+                instanceable = false
+                prepend references = @./source/robotiq_2f140/Robotiq_2F_140_physics_edit.usd@</Robotiq_2F_140/robotiq_base_link>
+            )
+            {
+                float3 xformOp:scale = (2.3, 2.3, 2.3)
+                uniform token[] xformOpOrder = ["xformOp:scale"]
+
+                over "_F_Body_01" (
+                    delete apiSchemas = ["PhysicsCollisionAPI"]
+                    instanceable = false
+                )
+                {
+                    over "_F_Body" (
+                        prepend apiSchemas = ["PhysicsCollisionAPI", "PhysicsMeshCollisionAPI"]
+                    )
+                    {
+                        uniform token physics:approximation = "convexHull"
+                    }
+                }
+            }
+
+            def Cylinder "FlangeAdapter" (
+                prepend apiSchemas = ["PhysicsCollisionAPI"]
+            )
+            {
+                double height = 0.025
+                double radius = 0.038
+                double3 xformOp:translate = (0, 0, -0.0125)
+                uniform token[] xformOpOrder = ["xformOp:translate"]
+            }
+        }
+
+        def Material "RubberPhysics" (
+            prepend apiSchemas = ["PhysicsMaterialAPI"]
+        )
+        {
+            float physics:dynamicFriction = 0.7
+            float physics:staticFriction = 0.8
+        }
+
+        def PhysicsRevoluteJoint "finger_joint"
+        {
+            uniform token physics:axis = "Z"
+            rel physics:body0 = </World/Gripper/Palm>
+            rel physics:body1 = </World/Gripper/left_outer_knuckle>
+            bool physics:collisionEnabled = 0
+            point3f physics:localPos0 = (-5.870484e-17, -0.07038263, 0.1257238)
+            point3f physics:localPos1 = (-0.07038263, 0.12628038, -1.4174844e-31)
+            quatf physics:localRot0 = (0.5, 0.5, -0.5, -0.5)
+            quatf physics:localRot1 = (6.123234e-17, 6.123234e-17, -1, 6.123234e-17)
+            float physics:lowerLimit = 0
+            float physics:upperLimit = 45
+        }
+
+        def PhysicsRevoluteJoint "right_outer_knuckle_joint"
+        {
+            uniform token physics:axis = "Z"
+            rel physics:body0 = </World/Gripper/Palm>
+            rel physics:body1 = </World/Gripper/right_outer_knuckle>
+            bool physics:collisionEnabled = 0
+            point3f physics:localPos0 = (-5.351127e-17, 0.07038263, 0.1257238)
+            point3f physics:localPos1 = (-0.07038263, 0.12628038, -5.90471e-18)
+            quatf physics:localRot0 = (0.5, 0.5, 0.5, 0.5)
+            quatf physics:localRot1 = (6.123234e-17, 6.123234e-17, -1, 6.123234e-17)
+            float physics:lowerLimit = 0
+            float physics:upperLimit = 75
+        }
+
+        def PhysicsRevoluteJoint "left_inner_knuckle_joint"
+        {
+            uniform token physics:axis = "Z"
+            rel physics:body0 = </World/Gripper/Palm>
+            rel physics:body1 = </World/Gripper/left_inner_knuckle>
+            bool physics:collisionEnabled = 0
+            point3f physics:localPos0 = (-6.47323e-17, -0.02921, 0.1407094)
+            point3f physics:localPos1 = (-0.02921, 0.141266, 0)
+            quatf physics:localRot0 = (-0.5, 0.5, 0.5, -0.5)
+            quatf physics:localRot1 = (1.1823733e-15, 1, 1.2635337e-11, -4.8699635e-16)
+            float physics:lowerLimit = -inf
+            float physics:upperLimit = inf
+        }
+
+        def PhysicsRevoluteJoint "right_inner_knuckle_joint"
+        {
+            uniform token physics:axis = "Z"
+            rel physics:body0 = </World/Gripper/Palm>
+            rel physics:body1 = </World/Gripper/right_inner_knuckle>
+            bool physics:collisionEnabled = 0
+            point3f physics:localPos0 = (-8.5637506e-17, 0.02921, 0.1407094)
+            point3f physics:localPos1 = (-0.02921, 0.141266, 0)
+            quatf physics:localRot0 = (-0.5, 0.5, 0.5, -0.5)
+            quatf physics:localRot1 = (6.123234e-17, 0, 0, 1)
+            float physics:lowerLimit = -inf
+            float physics:upperLimit = inf
+        }
+
+        def PhysicsRevoluteJoint "left_outer_finger_joint"
+        {
+            uniform token physics:axis = "Z"
+            rel physics:body0 = </World/Gripper/left_outer_knuckle>
+            rel physics:body1 = </World/Gripper/left_outer_finger>
+            bool physics:collisionEnabled = 0
+            point3f physics:localPos0 = (-0.1426598, 0.11585626, 2.8349688e-32)
+            point3f physics:localPos1 = (-0.1426598, 0.11585626, 1.8824193e-29)
+            quatf physics:localRot0 = (1, 0, 0, 0)
+            quatf physics:localRot1 = (1, 0, 0, 0)
+            float physics:lowerLimit = 0
+            float physics:upperLimit = 180
+        }
+
+        def PhysicsRevoluteJoint "right_outer_finger_joint"
+        {
+            uniform token physics:axis = "Z"
+            rel physics:body0 = </World/Gripper/right_outer_knuckle>
+            rel physics:body1 = </World/Gripper/right_outer_finger>
+            bool physics:collisionEnabled = 0
+            point3f physics:localPos0 = (-0.1426598, 0.11585626, -2.8349688e-32)
+            point3f physics:localPos1 = (-0.1426598, 0.11585626, 5.880333e-17)
+            quatf physics:localRot0 = (1, 0, 0, 0)
+            quatf physics:localRot1 = (1, 0, 0, 0)
+            float physics:lowerLimit = 0
+            float physics:upperLimit = 180
+        }
+
+        def PhysicsRevoluteJoint "left_inner_finger_joint"
+        {
+            uniform token physics:axis = "Z"
+            rel physics:body0 = </World/Gripper/left_outer_finger>
+            rel physics:body1 = </World/Gripper/Left>
+            bool physics:collisionEnabled = 0
+            point3f physics:localPos0 = (-0.22414933, 0.29732367, 0)
+            point3f physics:localPos1 = (0.2967671, 0.22414933, 0)
+            quatf physics:localRot0 = (-1.6081226e-16, 1, 4.4886255e-32, -1.1957719e-17)
+            quatf physics:localRot1 = (5.0532154e-16, -0.70710677, 0.70710677, 5.168029e-16)
+            float physics:lowerLimit = -inf
+            float physics:upperLimit = inf
+        }
+
+        def PhysicsRevoluteJoint "right_inner_finger_joint"
+        {
+            uniform token physics:axis = "Z"
+            rel physics:body0 = </World/Gripper/right_outer_finger>
+            rel physics:body1 = </World/Gripper/Right>
+            bool physics:collisionEnabled = 0
+            point3f physics:localPos0 = (-0.22414933, 0.29732367, 0)
+            point3f physics:localPos1 = (0.2967671, -0.22414933, 0)
+            quatf physics:localRot0 = (-1.6081226e-16, 1, -3.2311323e-27, -1.1957719e-17)
+            quatf physics:localRot1 = (0.70710677, 1.0999103e-15, -8.806161e-17, 0.70710677)
+            float physics:lowerLimit = -inf
+            float physics:upperLimit = inf
+        }
+
+        def PhysicsRevoluteJoint "right_inner_finger_pad_joint"
+        {
+            uniform token physics:axis = "Z"
+            rel physics:body0 = </World/Gripper/Right>
+            rel physics:body1 = </World/Gripper/right_inner_knuckle>
+            bool physics:collisionEnabled = 0
+            uniform bool physics:excludeFromArticulation = 1
+            point3f physics:localPos0 = (0.31175268, -0.1829767, 0)
+            point3f physics:localPos1 = (-0.1829767, 0.3123093, 0)
+            quatf physics:localRot0 = (0.70710677, -5.0381393e-16, 1.3193001e-15, 0.70710677)
+            quatf physics:localRot1 = (-3.8285688e-16, 1, 1.2578549e-11, 1.2142144e-15)
+            float physics:lowerLimit = -45
+            float physics:upperLimit = 45
+        }
+
+        def PhysicsRevoluteJoint "left_inner_finger_pad_joint"
+        {
+            uniform token physics:axis = "Z"
+            rel physics:body0 = </World/Gripper/Left>
+            rel physics:body1 = </World/Gripper/left_inner_knuckle>
+            bool physics:collisionEnabled = 0
+            uniform bool physics:excludeFromArticulation = 1
+            point3f physics:localPos0 = (0.31175268, 0.1829767, 0)
+            point3f physics:localPos1 = (-0.1829767, 0.3123093, 0)
+            quatf physics:localRot0 = (5.0532154e-16, -0.70710677, 0.70710677, 5.508117e-16)
+            quatf physics:localRot1 = (-8.269461e-16, 1, 1.2612578e-11, 9.284436e-17)
+            float physics:lowerLimit = -45
+            float physics:upperLimit = 45
+        }
+
+        def PhysicsFixedJoint "Mount"
+        {
+            rel physics:body0 = </World/UR10/ee_link>
+            rel physics:body1 = </World/Gripper/Palm>
+            point3f physics:localPos0 = (0, 0, 0.025)
+            quatf physics:localRot0 = (0.70710677, 0, 0, 0.70710677)
+        }
+    }
+}
+

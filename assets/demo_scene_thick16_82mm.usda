@@ -1,0 +1,277 @@
+#usda 1.0
+(
+    defaultPrim = "World"
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "World"
+{
+    def PhysicsScene "Physics" (
+        prepend apiSchemas = ["CardboardDemoAPI", "CardboardScenarioAPI"]
+    )
+    {
+        float cardboard:approachClearance = 0.2
+        rel cardboard:box = </World/Box>
+        float cardboard:contactDamping = 0.1
+        float cardboard:contactStiffness = 20000
+        float cardboard:crushForce = 150
+        float cardboard:crushGap = 0.082
+        float cardboard:crushRampFraction = 0.65
+        float cardboard:duration = 11
+        rel cardboard:fingerJoints = [
+            </World/Gripper/LeftJoint>,
+            </World/Gripper/RightJoint>,
+        ]
+        float cardboard:fps = 60
+        float cardboard:graspForce = 40
+        float cardboard:graspGap = 0.23
+        float cardboard:gravityRampSeconds = 1
+        float3 cardboard:homeOffset = (-0.22, 0, 0.24)
+        int cardboard:iterations = 96
+        float cardboard:liftHeight = 0.12
+        float cardboard:maxFingerForce = 30
+        float cardboard:maxWristTorque = 2
+        float cardboard:minimumGap = 0.16
+        float cardboard:openGap = 0.32
+        float[] cardboard:phaseEnds = [1, 3, 5, 7, 9, 12, 13, 16]
+        rel cardboard:robot = </World/UR10>
+        int cardboard:substeps = 16
+        float cardboard:twistRadians = 0.12
+        vector3f physics:gravityDirection = (0, 0, -1)
+        float physics:gravityMagnitude = 9.81
+    }
+
+    def Xform "Box" (
+        prepend references = @./cardboard_thick16_82mm.usda@
+    )
+    {
+        double3 xformOp:translate = (0.32, 0, 0.7545854187965393)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    def Cube "Table" (
+        prepend apiSchemas = ["PhysicsCollisionAPI"]
+    )
+    {
+        color3f[] primvars:displayColor = [(0.16, 0.2, 0.24)]
+        double size = 1
+        float3 xformOp:scale = (1.8, 1, 0.08)
+        double3 xformOp:translate = (0.12, 0, 0.61)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Cube "Leg0" (
+        prepend apiSchemas = ["PhysicsCollisionAPI"]
+    )
+    {
+        color3f[] primvars:displayColor = [(0.1, 0.12, 0.14)]
+        double size = 1
+        float3 xformOp:scale = (0.07, 0.07, 0.57)
+        double3 xformOp:translate = (-0.62, -0.4, 0.285)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Cube "Leg1" (
+        prepend apiSchemas = ["PhysicsCollisionAPI"]
+    )
+    {
+        color3f[] primvars:displayColor = [(0.1, 0.12, 0.14)]
+        double size = 1
+        float3 xformOp:scale = (0.07, 0.07, 0.57)
+        double3 xformOp:translate = (0.86, -0.4, 0.285)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Cube "Leg2" (
+        prepend apiSchemas = ["PhysicsCollisionAPI"]
+    )
+    {
+        color3f[] primvars:displayColor = [(0.1, 0.12, 0.14)]
+        double size = 1
+        float3 xformOp:scale = (0.07, 0.07, 0.57)
+        double3 xformOp:translate = (-0.62, 0.4, 0.285)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Cube "Leg3" (
+        prepend apiSchemas = ["PhysicsCollisionAPI"]
+    )
+    {
+        color3f[] primvars:displayColor = [(0.1, 0.12, 0.14)]
+        double size = 1
+        float3 xformOp:scale = (0.07, 0.07, 0.57)
+        double3 xformOp:translate = (0.86, 0.4, 0.285)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Cube "Floor" (
+        prepend apiSchemas = ["PhysicsCollisionAPI"]
+    )
+    {
+        color3f[] primvars:displayColor = [(0.08, 0.1, 0.12)]
+        double size = 1
+        float3 xformOp:scale = (5, 5, 0.05)
+        double3 xformOp:translate = (0, 0, -0.03)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Xform "UR10" (
+        prepend references = @./source/ur10/ur10.usd@
+    )
+    {
+        double3 xformOp:translate:placement = (-0.46, 0, 0.65)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale", "xformOp:translate:placement"]
+
+        over "ee_link" (
+            prepend apiSchemas = ["PhysicsMassAPI"]
+        )
+        {
+            float3 physics:diagonalInertia = (0.00005, 0.00005, 0.00005)
+            float physics:mass = 0.05
+        }
+    }
+
+    def Xform "Gripper"
+    {
+        def Xform "Palm" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+        )
+        {
+            float3 physics:diagonalInertia = (0.0007925, 0.0163025, 0.01649)
+            float physics:mass = 1.2
+            quatf xformOp:orient = (0.5, -0.5, -0.5, 0.5)
+            double3 xformOp:translate = (0.6093, 0.25614, 0.6616)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+
+            def Cube "Shape" (
+                prepend apiSchemas = ["PhysicsCollisionAPI"]
+            )
+            {
+                color3f[] primvars:displayColor = [(0.15, 0.16, 0.18)]
+                double size = 1
+                float3 xformOp:scale = (0.4, 0.07, 0.055)
+                uniform token[] xformOpOrder = ["xformOp:scale"]
+            }
+
+            def Cube "Spacer"
+            {
+                color3f[] primvars:displayColor = [(0.18, 0.2, 0.23)]
+                double size = 1
+                float3 xformOp:scale = (0.06, 0.06, 0.09)
+                double3 xformOp:translate = (0, 0, -0.045)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+            }
+        }
+
+        def PhysicsFixedJoint "Mount"
+        {
+            rel physics:body0 = </World/UR10/ee_link>
+            rel physics:body1 = </World/Gripper/Palm>
+            point3f physics:localPos0 = (0, 0, 0.115)
+            quatf physics:localRot0 = (1, 0, 0, 0)
+            quatf physics:localRot1 = (1, 0, 0, 0)
+        }
+
+        def Xform "Left" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+        )
+        {
+            float3 physics:diagonalInertia = (0.00042083333, 0.00026841665, 0.00018508334)
+            float physics:mass = 0.25
+            quatf xformOp:orient = (0.5, -0.5, -0.5, 0.5)
+            double3 xformOp:translate = (0.40929999999999994, 0.08214000000000005, 0.6616)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+
+            def Cube "Shape" (
+                prepend apiSchemas = ["PhysicsCollisionAPI"]
+            )
+            {
+                color3f[] primvars:displayColor = [(0.12, 0.13, 0.15)]
+                double size = 1
+                float3 xformOp:scale = (0.028, 0.09, 0.11)
+                uniform token[] xformOpOrder = ["xformOp:scale"]
+            }
+
+            def Cube "Stem" (
+                prepend apiSchemas = ["PhysicsCollisionAPI"]
+            )
+            {
+                color3f[] primvars:displayColor = [(0.22, 0.24, 0.26)]
+                double size = 1
+                float3 xformOp:scale = (0.016, 0.045, 0.13)
+                double3 xformOp:translate = (-0.022, 0, -0.11)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+            }
+        }
+
+        def PhysicsPrismaticJoint "LeftJoint" (
+            prepend apiSchemas = ["PhysicsDriveAPI:linear"]
+        )
+        {
+            float drive:linear:physics:damping = 0
+            float drive:linear:physics:stiffness = 0
+            uniform token drive:linear:physics:type = "force"
+            custom float newton:linear:position = -0.174
+            uniform token physics:axis = "X"
+            rel physics:body0 = </World/Gripper/Palm>
+            rel physics:body1 = </World/Gripper/Left>
+            point3f physics:localPos0 = (0, 0, 0.2)
+            quatf physics:localRot0 = (1, 0, 0, 0)
+            quatf physics:localRot1 = (1, 0, 0, 0)
+            float physics:lowerLimit = -0.19
+            float physics:upperLimit = -0.055
+        }
+
+        def Xform "Right" (
+            prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI"]
+        )
+        {
+            float3 physics:diagonalInertia = (0.00042083333, 0.00026841665, 0.00018508334)
+            float physics:mass = 0.25
+            quatf xformOp:orient = (0.5, -0.5, -0.5, 0.5)
+            double3 xformOp:translate = (0.40929999999999994, 0.43014, 0.6616)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+
+            def Cube "Shape" (
+                prepend apiSchemas = ["PhysicsCollisionAPI"]
+            )
+            {
+                color3f[] primvars:displayColor = [(0.12, 0.13, 0.15)]
+                double size = 1
+                float3 xformOp:scale = (0.028, 0.09, 0.11)
+                uniform token[] xformOpOrder = ["xformOp:scale"]
+            }
+
+            def Cube "Stem" (
+                prepend apiSchemas = ["PhysicsCollisionAPI"]
+            )
+            {
+                color3f[] primvars:displayColor = [(0.22, 0.24, 0.26)]
+                double size = 1
+                float3 xformOp:scale = (0.016, 0.045, 0.13)
+                double3 xformOp:translate = (0.022, 0, -0.11)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+            }
+        }
+
+        def PhysicsPrismaticJoint "RightJoint" (
+            prepend apiSchemas = ["PhysicsDriveAPI:linear"]
+        )
+        {
+            float drive:linear:physics:damping = 0
+            float drive:linear:physics:stiffness = 0
+            uniform token drive:linear:physics:type = "force"
+            custom float newton:linear:position = 0.174
+            uniform token physics:axis = "X"
+            rel physics:body0 = </World/Gripper/Palm>
+            rel physics:body1 = </World/Gripper/Right>
+            point3f physics:localPos0 = (0, 0, 0.2)
+            quatf physics:localRot0 = (1, 0, 0, 0)
+            quatf physics:localRot1 = (1, 0, 0, 0)
+            float physics:lowerLimit = 0.055
+            float physics:upperLimit = 0.19
+        }
+    }
+}
+

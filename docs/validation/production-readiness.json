@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-02",
+  "profile": "board4-crease45-rc1",
+  "production_qualified": false,
+  "validation": {
+    "locked_inputs": 31,
+    "source_regressions_passed": 94,
+    "relocated_regressions_passed": 94,
+    "relocated_manifest_files_verified": 340,
+    "relocated_gpu_smoke_s": 0.3,
+    "relocated_fresh_warp_cache": true,
+    "runtime_preflight_passed": true,
+    "candidate_full_cycle_s": 20,
+    "candidate_full_cycle_wall_s": 102.31372419001127,
+    "gui_controls_passed": true,
+    "gui_recorded_replay_passed": true,
+    "readme_local_links_checked": 36,
+    "readme_internal_links_checked": 14
+  },
+  "limits": [
+    "Existing compute environment reused; no clean OS install test.",
+    "Strict 20 mm tracked-material drift criterion fails.",
+    "Material/hardware calibration and external licensing not qualified."
+  ],
+  "source_evidence_directory": "outputs/production_readiness"
+}

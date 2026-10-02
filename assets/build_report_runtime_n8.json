@@ -1,0 +1,20 @@
+{
+  "source": "NVIDIA SimReady cardbox_a1",
+  "source_scale": 0.4,
+  "size_m": [
+    0.2797740459442139,
+    0.20846071243286135,
+    0.20397083759307863
+  ],
+  "simulation_vertices": 386,
+  "triangles": 768,
+  "hinges": 1152,
+  "render_vertices": 171840,
+  "max_binding_offset_m": 0.0028204023838043213,
+  "schemas": 6,
+  "panel_subdivisions": 8,
+  "render_max_edge_m": 0.012,
+  "render_triangles": 57280,
+  "closed_seams": true,
+  "full_orthotropic_membrane": false
+}

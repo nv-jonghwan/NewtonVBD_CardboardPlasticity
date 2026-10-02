@@ -1,0 +1,9 @@
+.cache/
+.venv/
+.venv-gui/
+__pycache__/
+*.pyc
+.workspace/
+outputs/
+deliverables/
+assets/source/

@@ -1,0 +1,18 @@
+#usda 1.0
+(
+    defaultPrim = "World"
+    metersPerUnit = 1
+    subLayers = [
+        @demo_scene_robotiq_board10_primitive.usda@
+    ]
+    upAxis = "Z"
+)
+
+over "World"
+{
+    over "Physics"
+    {
+        float cardboard:graspForce = 160
+    }
+}
+

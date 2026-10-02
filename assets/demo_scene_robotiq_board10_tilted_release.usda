@@ -1,0 +1,21 @@
+#usda 1.0
+(
+    metersPerUnit = 1
+    subLayers = [
+        @demo_scene_robotiq_board10_primitive.usda@
+    ]
+    upAxis = "Z"
+)
+
+over "World"
+{
+    over "Physics"
+    {
+        float cardboard:graspForce = 500
+        float3 cardboard:graspTiltDegrees = (0, 0, 0)
+        float cardboard:liftForce = 300
+        float3 cardboard:liftTiltDegrees = (30, 0, 0)
+        int cardboard:rigidParticleContactCapacity = 512
+    }
+}
+

@@ -1,0 +1,9 @@
+[package]
+version = "1.0.0"
+title = "Cardboard Grasp and Crush"
+description = "Interactive Newton UR10 cardboard scenario controls"
+category = "Simulation"
+[dependencies]
+"omni.ui" = {}
+[[python.module]]
+name = "cardboard_scenario"

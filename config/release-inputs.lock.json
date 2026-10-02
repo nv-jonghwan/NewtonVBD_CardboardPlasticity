@@ -1,0 +1,191 @@
+{
+  "schema_version": 1,
+  "profile": "board4-crease45-rc1",
+  "files": [
+    {
+      "path": "assets/cardboard_robotiq_board10.usda",
+      "sha256": "0b2cad4d4ef7bc162945f90dc245c87a68864de87e713d0d67a3543d0f174342",
+      "bytes": 85421921
+    },
+    {
+      "path": "assets/demo_scene_robotiq_board10_primitive.usda",
+      "sha256": "cb9f8a94da3b7200fd5330b0aafc7c0fa810e84d44877421c814fbf1a3dc0684",
+      "bytes": 38698
+    },
+    {
+      "path": "assets/demo_scene_robotiq_board10_secure_tilt.usda",
+      "sha256": "41f6600984833221e2d92f62f8ca45a35654a825e04ae7b772ef42eabc1fc66d",
+      "bytes": 1401
+    },
+    {
+      "path": "assets/demo_scene_robotiq_board10_tilted_release.usda",
+      "sha256": "efb6529fcd7d9b02f96e63a6e337a59cfa00e47eb01823cfde4639a10bf3262c",
+      "bytes": 425
+    },
+    {
+      "path": "assets/demo_scene_robotiq_board4_flat_panels.usda",
+      "sha256": "7576a5a77546d53b91cd1303aae9c8f4dbf18e006d9efd603adffca4e91e49a0",
+      "bytes": 338
+    },
+    {
+      "path": "assets/demo_scene_robotiq_board4_graded.usda",
+      "sha256": "8836cad8cdba2a15e9cfa22362221755c964e2f2f84ffd28cb5a885595b972cf",
+      "bytes": 18233836
+    },
+    {
+      "path": "assets/models/board4_rank8.npz",
+      "sha256": "56a10990b18686d20e3b11e94c72614d053c95e9487eaf1b614199054397c70f",
+      "bytes": 80785
+    },
+    {
+      "path": "assets/source/cardbox_a1/Textures/T_Cardbox_A1_Albedo.png",
+      "sha256": "b4d1621d4daa87fb43543577769433434eee9068acc62859021db7706076b6f3",
+      "bytes": 17241944,
+      "url": "https://omniverse-content-production.s3.us-west-2.amazonaws.com/Assets/simready_content/common_assets/props/cardbox_a1/Textures/T_Cardbox_A1_Albedo.png"
+    },
+    {
+      "path": "assets/source/cardbox_a1/Textures/T_Cardbox_A1_Normal.png",
+      "sha256": "a7656749aa28e4481844872f4fa7f2150864551a7746897546bd65bf8c5de29d",
+      "bytes": 11496015,
+      "url": "https://omniverse-content-production.s3.us-west-2.amazonaws.com/Assets/simready_content/common_assets/props/cardbox_a1/Textures/T_Cardbox_A1_Normal.png"
+    },
+    {
+      "path": "assets/source/cardbox_a1/Textures/T_Cardbox_A1_ORM.png",
+      "sha256": "b17a14ad18e44a532ff824fffccfbde589725302cfae1ea3da5b8a313fc46884",
+      "bytes": 13634830,
+      "url": "https://omniverse-content-production.s3.us-west-2.amazonaws.com/Assets/simready_content/common_assets/props/cardbox_a1/Textures/T_Cardbox_A1_ORM.png"
+    },
+    {
+      "path": "assets/source/cardbox_a1/cardbox_a1.usd",
+      "sha256": "eabdb6760a71fdfbcba7301ac1db9d3dd9d4cd40e0e77fc170c7523302ef0e87",
+      "bytes": 1424,
+      "url": "https://omniverse-content-production.s3.us-west-2.amazonaws.com/Assets/simready_content/common_assets/props/cardbox_a1/cardbox_a1.usd"
+    },
+    {
+      "path": "assets/source/cardbox_a1/cardbox_a1_base.usd",
+      "sha256": "85bc8f04832452aa84d9092d621301958df5a6e3652f7a7578716c05c5ab1faf",
+      "bytes": 4130,
+      "url": "https://omniverse-content-production.s3.us-west-2.amazonaws.com/Assets/simready_content/common_assets/props/cardbox_a1/cardbox_a1_base.usd"
+    },
+    {
+      "path": "assets/source/cardbox_a1/cardbox_a1_inst.usd",
+      "sha256": "8bd1b9db2a5932f23627d7047c788e55d8f3e392a3deaa1fdaf89263e800d98f",
+      "bytes": 672,
+      "url": "https://omniverse-content-production.s3.us-west-2.amazonaws.com/Assets/simready_content/common_assets/props/cardbox_a1/cardbox_a1_inst.usd"
+    },
+    {
+      "path": "assets/source/cardbox_a1/cardbox_a1_inst_base.usd",
+      "sha256": "04b03e7b5ddbe48bcfb28dbaf0c78c6f2cf038985dda8c4464eb8c5830dbfca1",
+      "bytes": 36791,
+      "url": "https://omniverse-content-production.s3.us-west-2.amazonaws.com/Assets/simready_content/common_assets/props/cardbox_a1/cardbox_a1_inst_base.usd"
+    },
+    {
+      "path": "assets/source/robotiq_2f140/Robotiq_2F_140_base.usd",
+      "sha256": "6b4be6be7eb0b6bf5f100b305d384b0b226a5f8a963f7bd1c4aaea44ede1fd02",
+      "bytes": 6497,
+      "url": "https://omniverse-content-production.s3.us-west-2.amazonaws.com/Assets/Isaac/5.0/Isaac/Robots/Robotiq/2F-140/Robotiq_2F_140_base.usd"
+    },
+    {
+      "path": "assets/source/robotiq_2f140/Robotiq_2F_140_physics_edit.usd",
+      "sha256": "ca4ccdb4ffc8fbbddd21e11b00bff584f299054ac79cbdb73319c7b7c0d3bc9c",
+      "bytes": 30633,
+      "url": "https://omniverse-content-production.s3.us-west-2.amazonaws.com/Assets/Isaac/5.0/Isaac/Robots/Robotiq/2F-140/Robotiq_2F_140_physics_edit.usd"
+    },
+    {
+      "path": "assets/source/robotiq_2f140/configuration/Robotiq_2F_140_robot.usd",
+      "sha256": "1bd2d1d09f9e0cbbae6ceb56e93e879bc140bd4c6a716c6b642b90e54f702353",
+      "bytes": 3576,
+      "url": "https://omniverse-content-production.s3.us-west-2.amazonaws.com/Assets/Isaac/5.0/Isaac/Robots/Robotiq/2F-140/configuration/Robotiq_2F_140_robot.usd"
+    },
+    {
+      "path": "assets/source/robotiq_2f140/materials/materials.usd",
+      "sha256": "bca6ed628c230b6ee3ba899421c6124a229133b80402f1f5d0d89e6d5dff9449",
+      "bytes": 3293,
+      "url": "https://omniverse-content-production.s3.us-west-2.amazonaws.com/Assets/Isaac/5.0/Isaac/Robots/Robotiq/2F-140/materials/materials.usd"
+    },
+    {
+      "path": "assets/source/robotiq_2f140/parts/Finger1_JFT.usd",
+      "sha256": "e86261753dd9264b43c0d4321ca69e2fe29027e117b6aea2269a4c3e7d81acdc",
+      "bytes": 16432,
+      "url": "https://omniverse-content-production.s3.us-west-2.amazonaws.com/Assets/Isaac/5.0/Isaac/Robots/Robotiq/2F-140/parts/Finger1_JFT.usd"
+    },
+    {
+      "path": "assets/source/robotiq_2f140/parts/Finger2_JFP.usd",
+      "sha256": "ee993d6d35c3a6a30d4aa0f51ae5536f162c5494fe45654e259ed37ae6b151a4",
+      "bytes": 336533,
+      "url": "https://omniverse-content-production.s3.us-west-2.amazonaws.com/Assets/Isaac/5.0/Isaac/Robots/Robotiq/2F-140/parts/Finger2_JFP.usd"
+    },
+    {
+      "path": "assets/source/robotiq_2f140/parts/Finger3_JFH.usd",
+      "sha256": "9c08ba65173b0a8f40e46a90962cf45b08b3ec3e2c93b94b1085f89ae67ded39",
+      "bytes": 183509,
+      "url": "https://omniverse-content-production.s3.us-west-2.amazonaws.com/Assets/Isaac/5.0/Isaac/Robots/Robotiq/2F-140/parts/Finger3_JFH.usd"
+    },
+    {
+      "path": "assets/source/robotiq_2f140/parts/Finger4_JFL.usd",
+      "sha256": "d118ceb30bf7eee70c2c79daef9ff09f611a83287a8d246eeb96a0406eedd186",
+      "bytes": 173935,
+      "url": "https://omniverse-content-production.s3.us-west-2.amazonaws.com/Assets/Isaac/5.0/Isaac/Robots/Robotiq/2F-140/parts/Finger4_JFL.usd"
+    },
+    {
+      "path": "assets/source/robotiq_2f140/parts/Fingertip_JFD.usd",
+      "sha256": "b921ef19658b0e4732e555c954c853b61117240e9fdf6948fea5f0b8a82e1629",
+      "bytes": 53078,
+      "url": "https://omniverse-content-production.s3.us-west-2.amazonaws.com/Assets/Isaac/5.0/Isaac/Robots/Robotiq/2F-140/parts/Fingertip_JFD.usd"
+    },
+    {
+      "path": "assets/source/robotiq_2f140/parts/_F_Body_JFX.usd",
+      "sha256": "a4eae6e66d77b87a4dcc8c41a42becdbc0f4e5164bc696950dd40c887b9d65f0",
+      "bytes": 4351738,
+      "url": "https://omniverse-content-production.s3.us-west-2.amazonaws.com/Assets/Isaac/5.0/Isaac/Robots/Robotiq/2F-140/parts/_F_Body_JFX.usd"
+    },
+    {
+      "path": "assets/source/ur10/configuration/ur10_base.usd",
+      "sha256": "0cc69c0ab37c2d775048898e52b19f2a6bd1117f76a97eee02bf1eeaab7c857a",
+      "bytes": 21122271,
+      "url": "https://omniverse-content-production.s3.us-west-2.amazonaws.com/Assets/Isaac/5.0/Isaac/Robots/UniversalRobots/ur10/configuration/ur10_base.usd"
+    },
+    {
+      "path": "assets/source/ur10/configuration/ur10_physics.usd",
+      "sha256": "c04a1e376b550e88d8db1f615e6d9dc2e08fedb4ad35e27fcea6aa3088e130c7",
+      "bytes": 13970,
+      "url": "https://omniverse-content-production.s3.us-west-2.amazonaws.com/Assets/Isaac/5.0/Isaac/Robots/UniversalRobots/ur10/configuration/ur10_physics.usd"
+    },
+    {
+      "path": "assets/source/ur10/configuration/ur10_robot_schema.usd",
+      "sha256": "5a666e5956abc0e788174728badcb7fd809f98fff965f7365a1743c0c785faa2",
+      "bytes": 2293,
+      "url": "https://omniverse-content-production.s3.us-west-2.amazonaws.com/Assets/Isaac/5.0/Isaac/Robots/UniversalRobots/ur10/configuration/ur10_robot_schema.usd"
+    },
+    {
+      "path": "assets/source/ur10/configuration/ur10_sensor.usd",
+      "sha256": "c2393347a3b12fb6a238eeff4c13762be3e1ee7da7515f30dcaa294596ec3b80",
+      "bytes": 640,
+      "url": "https://omniverse-content-production.s3.us-west-2.amazonaws.com/Assets/Isaac/5.0/Isaac/Robots/UniversalRobots/ur10/configuration/ur10_sensor.usd"
+    },
+    {
+      "path": "assets/source/ur10/ur10.usd",
+      "sha256": "ce5aadb9fb6f1dda40e63b8aed38bf8d97ab434f630f2538753c0934c0bdc7cb",
+      "bytes": 11663,
+      "url": "https://omniverse-content-production.s3.us-west-2.amazonaws.com/Assets/Isaac/5.0/Isaac/Robots/UniversalRobots/ur10/ur10.usd"
+    },
+    {
+      "path": "config/production_candidate.json",
+      "sha256": "793064568dfecf91fdb83439faeb648baee3af839f94a0482e6943c4358aa8de",
+      "bytes": 956
+    },
+    {
+      "path": "assets/models/board4_rank8.json",
+      "bytes": 694,
+      "sha256": "ead8a690af9f46fb60cc9ee826ae7283584695bd1af99fe2b79a075d629c358f"
+    }
+  ],
+  "non_active_or_runtime_dependencies": {
+    "OmniPBR.mdl": "Provided by Isaac Sim MDL search path, not the compute environment.",
+    "grippers/long_gripper.usd": "Unselected UR10 gripper variant.",
+    "grippers/short_gripper.usd": "Unselected UR10 gripper variant.",
+    "common_tools/content_tagging/thumbnail_rigs/thumb_rig_prop.usd": "Original source-asset thumbnail metadata, not composed simulation.",
+    "materials/SimPBR.mdl": "Original source-asset material, not the active custom cardboard material.",
+    "materials/physics/physics_cardboard.usda": "Original source-asset material, not the active custom cardboard material."
+  }
+}

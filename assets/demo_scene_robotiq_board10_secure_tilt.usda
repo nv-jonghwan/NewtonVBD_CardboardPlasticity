@@ -1,0 +1,55 @@
+#usda 1.0
+(
+    metersPerUnit = 1
+    subLayers = [
+        @demo_scene_robotiq_board10_tilted_release.usda@
+    ]
+    upAxis = "Z"
+)
+
+over "World"
+{
+    over "Physics"
+    {
+        float3 cardboard:crushTiltDegrees = (60, 0, 0)
+        float cardboard:graspGap = 0.278
+        float cardboard:liftForce = 500
+        custom int cardboard:particleSolveInterval = 1
+        float cardboard:releaseRampFraction = 1
+        float3 cardboard:releaseTiltDegrees = (100, 0, 0)
+        float cardboard:rigidJointLinearStiffness = 200000
+        custom float cardboard:toolReach = 0.4637198
+    }
+
+    over "Gripper"
+    {
+        def Material "GripPadPhysics" (
+            prepend apiSchemas = ["PhysicsMaterialAPI"]
+        )
+        {
+            float physics:dynamicFriction = 1.5
+            float physics:staticFriction = 1.5
+        }
+
+        over "Left"
+        {
+            over "Collider_Fingertip" (
+                apiSchemas = ["PhysicsCollisionAPI", "MaterialBindingAPI"]
+            )
+            {
+                rel material:binding:physics = </World/Gripper/GripPadPhysics>
+            }
+        }
+
+        over "Right"
+        {
+            over "Collider_Fingertip" (
+                apiSchemas = ["PhysicsCollisionAPI", "MaterialBindingAPI"]
+            )
+            {
+                rel material:binding:physics = </World/Gripper/GripPadPhysics>
+            }
+        }
+    }
+}
+

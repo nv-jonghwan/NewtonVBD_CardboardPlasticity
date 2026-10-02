@@ -1,0 +1,401 @@
+{
+  "date": "2026-10-02",
+  "profile": "board4-crease45-rc1",
+  "production_qualified": false,
+  "qualification": "Illustrative uncalibrated material; shared GPU measurements; shell/envelope volume proxies, not measured compression. Source outputs are excluded from the review bundle.",
+  "regression_tests": 94,
+  "runs": [
+    {
+      "label": "Selected GPU 1",
+      "source_run": "outputs/crease_friction/friction45_gpu1",
+      "changes": {
+        "11-12": {
+          "shell_volume_change_percent": -5.679547755052483,
+          "convex_envelope_change_percent": -2.189198387469393,
+          "area_change_percent": -0.19721972170658741,
+          "panel_separation_change_mm": [
+            -6.848149406362358,
+            -7.209114548525742,
+            -2.3498856226322475
+          ]
+        },
+        "12-14": {
+          "shell_volume_change_percent": 4.77206480430028,
+          "convex_envelope_change_percent": 1.8982937863335936,
+          "area_change_percent": 0.020143890820900623,
+          "panel_separation_change_mm": [
+            5.198127426261107,
+            7.466604003635386,
+            -2.1455548257912627
+          ]
+        },
+        "12-16": {
+          "shell_volume_change_percent": 5.8883780329016755,
+          "convex_envelope_change_percent": 2.6955800460131574,
+          "area_change_percent": -0.0731638800462231,
+          "panel_separation_change_mm": [
+            6.049569102514557,
+            9.543590521259748,
+            -2.916109987901594
+          ]
+        },
+        "14-16": {
+          "shell_volume_change_percent": 1.0654683867178827,
+          "convex_envelope_change_percent": 0.7824333755296786,
+          "area_change_percent": -0.09328897883708054,
+          "panel_separation_change_mm": [
+            0.8514416762534505,
+            2.0769865176243627,
+            -0.7705551621103313
+          ]
+        },
+        "12-20": {
+          "shell_volume_change_percent": 5.985599746883863,
+          "convex_envelope_change_percent": 2.705716510109535,
+          "area_change_percent": -0.07785069028429792,
+          "panel_separation_change_mm": [
+            6.304666582658464,
+            9.595404448561412,
+            -3.3398124926797834
+          ]
+        },
+        "16-20": {
+          "shell_volume_change_percent": 0.09181528302566466,
+          "convex_envelope_change_percent": 0.009870399574962718,
+          "area_change_percent": -0.004690241800953121,
+          "panel_separation_change_mm": [
+            0.25509748014390654,
+            0.05181392730166379,
+            -0.4237025047781895
+          ]
+        },
+        "18-20": {
+          "shell_volume_change_percent": 0.0,
+          "convex_envelope_change_percent": 0.0,
+          "area_change_percent": 0.0,
+          "panel_separation_change_mm": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "grip_checks": {
+        "complete_hold_window": true,
+        "no_table_return_before_release": true,
+        "bilateral_contact_through_hold": true,
+        "pad_material_drift_within20mm": false,
+        "both_fingertips_geometrically_engaged": true
+      },
+      "grip_passed": false
+    },
+    {
+      "label": "Selected GPU 0",
+      "source_run": "outputs/crease_friction/friction45",
+      "changes": {
+        "11-12": {
+          "shell_volume_change_percent": -5.6951682098272505,
+          "convex_envelope_change_percent": -2.2063045685484117,
+          "area_change_percent": -0.020281409842914933,
+          "panel_separation_change_mm": [
+            -6.734110338448563,
+            -7.078178281749947,
+            -2.3599582731888558
+          ]
+        },
+        "12-14": {
+          "shell_volume_change_percent": 9.475808222536909,
+          "convex_envelope_change_percent": 4.508254505851639,
+          "area_change_percent": -0.14349265343920337,
+          "panel_separation_change_mm": [
+            10.657116423665736,
+            14.732754995739782,
+            -3.304283870748076
+          ]
+        },
+        "12-16": {
+          "shell_volume_change_percent": 9.212864148844258,
+          "convex_envelope_change_percent": 4.735132575478218,
+          "area_change_percent": -0.22778715056627208,
+          "panel_separation_change_mm": [
+            10.539452817131812,
+            14.99762792460954,
+            -4.424724638003363
+          ]
+        },
+        "14-16": {
+          "shell_volume_change_percent": -0.24018463801440681,
+          "convex_envelope_change_percent": 0.21709105247171845,
+          "area_change_percent": -0.08441562735066466,
+          "panel_separation_change_mm": [
+            -0.11766360653392427,
+            0.2648729288697582,
+            -1.1204407672552874
+          ]
+        },
+        "12-20": {
+          "shell_volume_change_percent": 9.163536971656661,
+          "convex_envelope_change_percent": 4.806278642167072,
+          "area_change_percent": -0.22968907274782957,
+          "panel_separation_change_mm": [
+            10.536389527655398,
+            15.303084389831328,
+            -4.916145387869553
+          ]
+        },
+        "16-20": {
+          "shell_volume_change_percent": -0.04516608695508406,
+          "convex_envelope_change_percent": 0.06792951413661097,
+          "area_change_percent": -0.0019062644069256507,
+          "panel_separation_change_mm": [
+            -0.003063289476412656,
+            0.30545646522178727,
+            -0.49142074986618933
+          ]
+        },
+        "18-20": {
+          "shell_volume_change_percent": 0.0,
+          "convex_envelope_change_percent": 0.0,
+          "area_change_percent": 0.0,
+          "panel_separation_change_mm": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "grip_checks": {
+        "complete_hold_window": true,
+        "no_table_return_before_release": true,
+        "bilateral_contact_through_hold": true,
+        "pad_material_drift_within20mm": false,
+        "both_fingertips_geometrically_engaged": true
+      },
+      "grip_passed": false
+    },
+    {
+      "label": "Actual live GUI",
+      "source_run": "outputs/crease_friction/live_gui",
+      "changes": {
+        "11-12": {
+          "shell_volume_change_percent": -6.061275896923246,
+          "convex_envelope_change_percent": -2.5148697550891552,
+          "area_change_percent": -0.339091150638815,
+          "panel_separation_change_mm": [
+            -7.539089395101284,
+            -7.405237277516324,
+            -2.969085558383683
+          ]
+        },
+        "12-14": {
+          "shell_volume_change_percent": 6.429938729088036,
+          "convex_envelope_change_percent": 3.382787973457768,
+          "area_change_percent": 0.08699769004942848,
+          "panel_separation_change_mm": [
+            6.8223326060422025,
+            9.527258021727103,
+            -1.107485013006504
+          ]
+        },
+        "12-16": {
+          "shell_volume_change_percent": 7.233091521128143,
+          "convex_envelope_change_percent": 3.451904401449668,
+          "area_change_percent": 0.02722299592312627,
+          "panel_separation_change_mm": [
+            7.708161148793052,
+            11.201295394025951,
+            -2.6214149692871946
+          ]
+        },
+        "14-16": {
+          "shell_volume_change_percent": 0.7546305124580543,
+          "convex_envelope_change_percent": 0.06685486950654962,
+          "area_change_percent": -0.0597227367249209,
+          "panel_separation_change_mm": [
+            0.8858285427508494,
+            1.6740373722988477,
+            -1.5139299562806907
+          ]
+        },
+        "12-20": {
+          "shell_volume_change_percent": 7.126001795645132,
+          "convex_envelope_change_percent": 3.1190690309073954,
+          "area_change_percent": -0.02002481150806812,
+          "panel_separation_change_mm": [
+            7.95331917985806,
+            10.744766556109647,
+            -3.222188658852515
+          ]
+        },
+        "16-20": {
+          "shell_volume_change_percent": -0.09986630429461574,
+          "convex_envelope_change_percent": -0.321729573242735,
+          "area_change_percent": -0.04723494866305522,
+          "panel_separation_change_mm": [
+            0.245158031065007,
+            -0.4565288379163035,
+            -0.6007736895653204
+          ]
+        },
+        "18-20": {
+          "shell_volume_change_percent": 0.030417009837102604,
+          "convex_envelope_change_percent": -0.22730173234890572,
+          "area_change_percent": -0.03574146058119565,
+          "panel_separation_change_mm": [
+            0.3566042026554306,
+            -0.1573634112879141,
+            -0.32260653206922507
+          ]
+        }
+      },
+      "grip_checks": {
+        "complete_hold_window": true,
+        "no_table_return_before_release": true,
+        "bilateral_contact_through_hold": true,
+        "pad_material_drift_within20mm": false,
+        "both_fingertips_geometrically_engaged": true
+      },
+      "grip_passed": false
+    },
+    {
+      "label": "Portable candidate launcher validation",
+      "source_run": "outputs/production_readiness/full20",
+      "changes": {
+        "11-12": {
+          "shell_volume_change_percent": -4.758372793151833,
+          "convex_envelope_change_percent": -1.9089940628283175,
+          "area_change_percent": -0.09678348870274522,
+          "panel_separation_change_mm": [
+            -5.167541211056697,
+            -6.237225747695335,
+            -2.191047152106967
+          ]
+        },
+        "12-14": {
+          "shell_volume_change_percent": 2.97983079332631,
+          "convex_envelope_change_percent": 0.9031335279668262,
+          "area_change_percent": -0.11209255122216488,
+          "panel_separation_change_mm": [
+            3.939393301291089,
+            5.330372543987716,
+            -2.579333831500552
+          ]
+        },
+        "12-16": {
+          "shell_volume_change_percent": 4.038850078769496,
+          "convex_envelope_change_percent": 1.5270174749810295,
+          "area_change_percent": -0.14975339007768929,
+          "panel_separation_change_mm": [
+            5.446505182344019,
+            6.962659420079315,
+            -3.661926941772725
+          ]
+        },
+        "14-16": {
+          "shell_volume_change_percent": 1.0283754374859733,
+          "convex_envelope_change_percent": 0.6182998735527745,
+          "area_change_percent": -0.03770310122357401,
+          "panel_separation_change_mm": [
+            1.5071118810529305,
+            1.6322868760915987,
+            -1.082593110272173
+          ]
+        },
+        "12-20": {
+          "shell_volume_change_percent": 4.087523701201068,
+          "convex_envelope_change_percent": 1.6426150534957884,
+          "area_change_percent": -0.20766393241856695,
+          "panel_separation_change_mm": [
+            5.271633077420457,
+            7.290878208980805,
+            -4.845629814026781
+          ]
+        },
+        "16-20": {
+          "shell_volume_change_percent": 0.046784083440676305,
+          "convex_envelope_change_percent": 0.11385893271538272,
+          "area_change_percent": -0.05799739540666149,
+          "panel_separation_change_mm": [
+            -0.17487210492356242,
+            0.3282187889014909,
+            -1.1837028722540555
+          ]
+        },
+        "18-20": {
+          "shell_volume_change_percent": 0.020685031865452785,
+          "convex_envelope_change_percent": 0.019501670577359853,
+          "area_change_percent": -0.008933098368979486,
+          "panel_separation_change_mm": [
+            -0.016341960099169883,
+            0.06051492907102607,
+            -0.18106579367313524
+          ]
+        }
+      },
+      "grip_checks": {
+        "complete_hold_window": true,
+        "no_table_return_before_release": true,
+        "bilateral_contact_through_hold": true,
+        "pad_material_drift_within20mm": false,
+        "both_fingertips_geometrically_engaged": true
+      },
+      "grip_passed": false,
+      "rest": {
+        "end_speed_mm_s": 0.0,
+        "postdrop_side_motion": {
+          "13": {
+            "max_excursion_from_final_mm": 287.4600804374631,
+            "max_frame_step_mm": 39.94804315017989
+          },
+          "14": {
+            "max_excursion_from_final_mm": 231.11798174130567,
+            "max_frame_step_mm": 11.593018841812825
+          },
+          "15": {
+            "max_excursion_from_final_mm": 6.217906713583166,
+            "max_frame_step_mm": 0.8083217853373127
+          }
+        },
+        "sleep_events": [
+          {
+            "t": 1.2833333333333337,
+            "sleeping": true
+          },
+          {
+            "t": 5.016666666666654,
+            "sleeping": false
+          },
+          {
+            "t": 18.50000000000023,
+            "sleeping": true
+          }
+        ],
+        "supported_first_t": 13.450000000000248,
+        "mode_frames": {
+          "0": 601,
+          "1": 284,
+          "2": 315
+        },
+        "wall_s": 102.31356039000093,
+        "post12_wall_s": 58.175069163989974,
+        "material_checks": {
+          "finite": true,
+          "nonnegative_monotonic_work": true,
+          "valid_history": true,
+          "damage_bounded": true
+        },
+        "no_loaded_sleep": true
+      },
+      "wall_time_s": 102.31372419001127,
+      "duration_s": 20.000000000000146,
+      "error": null
+    }
+  ],
+  "live_gui_crease_work_J": 28.704708,
+  "gui_render": {
+    "path": "docs/media/selected-crush-render.png",
+    "source_run": "outputs/crease_friction/live_gui",
+    "source_t_s": 12.0,
+    "method": "Isaac Sim rendering of recorded Newton state; not a desktop screenshot"
+  }
+}

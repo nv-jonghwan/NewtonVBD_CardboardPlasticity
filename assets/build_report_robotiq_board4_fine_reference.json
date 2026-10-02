@@ -1,0 +1,42 @@
+{
+  "scene": "assets/demo_scene_robotiq_board4_fine_reference.usda",
+  "source": "assets/demo_scene_robotiq_board10_secure_tilt.usda",
+  "physical_vertices": 3458,
+  "physical_triangles": 6912,
+  "hinges": 10368,
+  "counts": [
+    24,
+    24,
+    24
+  ],
+  "graded": false,
+  "render_vertices": 112104,
+  "render_triangles": 37368,
+  "material_changes": {
+    "thickness": 0.004,
+    "arealDensity": 0.7200000447034846,
+    "membraneShear": 14112.000315427787,
+    "membraneArea": 23520.000525712978,
+    "yieldCurvature": 14.999999664723873,
+    "creaseDamageLength": 0.005333333209156988
+  },
+  "bending_ratio": 0.06400000429153462,
+  "small_bend": {
+    "scale": 16.0,
+    "knee": 0.7499999832361937,
+    "end": 14.749999670311809
+  },
+  "mass_kg": 0.21948178112506866,
+  "midsurface_size_m": [
+    0.27577404929697513,
+    0.20446071280539035,
+    0.19997082902491092
+  ],
+  "physical_edge_mm": {
+    "min": 8.332114219665527,
+    "max": 14.304219245910645
+  },
+  "max_edge_aspect": 1.7034798860549927,
+  "rest_render_binding_error_m": 0.0,
+  "qualification": "Static feature-graded shell. Fresh state required. Same exterior, density scales with t, membrane with t, bending with t^3; illustrative homogenized material, not measured corrugation."
+}

@@ -1,0 +1,31 @@
+{
+  "scene": "assets/demo_scene_robotiq_board10.usda",
+  "asset": "assets/cardboard_robotiq_board10.usda",
+  "ratio": 0.6666666666666666,
+  "material_changes": {
+    "thickness": 0.009999999776482582,
+    "arealDensity": 1.8000000317891438,
+    "membraneShear": 35280.0,
+    "membraneArea": 58800.0,
+    "yieldCurvature": 6.0,
+    "creaseDamageLength": 0.013333333035310108,
+    "internalVelocityDamping": 60.0,
+    "supportedInternalDamping": 3000.0
+  },
+  "settings": {
+    "iterations": 48,
+    "substeps": 16,
+    "particleSolveInterval": 3,
+    "rotationBlockSolve": true,
+    "supportedSleep": true,
+    "restRefinement": true,
+    "coupledSupportedSolve": true,
+    "selfContactRestExclusion": 0.010009999776482582
+  },
+  "physics_vertices": 3458,
+  "physics_triangles": 6912,
+  "render_vertices": 521280,
+  "render_triangles": 173760,
+  "equivalent_bending_ratio": 0.2962962962962962,
+  "qualification": "Same homogenized board at lower gauge: areal mass/membrane scale with t, D with t^3, yield curvature inversely with t. Outer graphics and topology preserved; midsurface/binding rebuilt. Illustrative, not measured corrugation."
+}
