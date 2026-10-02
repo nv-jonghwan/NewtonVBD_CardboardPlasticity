@@ -1,0 +1,19 @@
+#usda 1.0
+(
+    defaultPrim = "Box"
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+def Xform "Box" (
+    references = @demo_scene_robotiq_board4_vertical.usda@</World/Box>
+    assetInfo = {
+        string name = "Cardboard — Newton deformable shell"
+    }
+    customData = {
+        string simulationCapability = "Newton deformable shell / CardboardSolverAPI"
+        string qualification = "Project runtime contract; no formal SimReady certification"
+    }
+)
+{
+    double3 xformOp:translate = (0, 0, 0)
+}

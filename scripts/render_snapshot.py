@@ -10,6 +10,7 @@ from pxr import UsdGeom,UsdPhysics,UsdLux,Gf,Vt
 from PIL import Image
 from cardboard.geometry import skin
 from cardboard.surface import PanelSurface
+from cardboard.camera import set_camera_view
 root=Path(__file__).resolve().parents[1]
 omni.usd.get_context().open_stage(str(root/a.scene))
 for _ in range(20):app.update()
@@ -33,7 +34,7 @@ if r.GetPrim().GetAttribute('cardboard:surfaceInterpolation').Get() == 'creaseAw
 else:display=skin(points-center,inds,w,off).astype(np.float32)
 r.GetPointsAttr().Set(Vt.Vec3fArray.FromNumpy(display))
 UsdLux.DomeLight.Define(s,'/World/InspectLight').CreateIntensityAttr(1000)
-cam=UsdGeom.Camera.Define(s,'/World/InspectCamera');cam.CreateFocalLengthAttr(35);cam.AddTransformOp().Set(Gf.Matrix4d().SetLookAt(Gf.Vec3d(*a.eye),Gf.Vec3d(*a.target),Gf.Vec3d(0,0,1)).GetInverse())
+cam=UsdGeom.Camera.Define(s,'/World/InspectCamera');set_camera_view(cam,a.eye,a.target,35)
 product=rep.create.render_product('/World/InspectCamera',(1280,900));rgb=rep.AnnotatorRegistry.get_annotator('rgb');rgb.attach([product]);rep.orchestrator.step(rt_subframes=8,delta_time=0,pause_timeline=True)
 for _ in range(30):app.update()
 image=rgb.get_data();assert isinstance(image,np.ndarray) and image.size

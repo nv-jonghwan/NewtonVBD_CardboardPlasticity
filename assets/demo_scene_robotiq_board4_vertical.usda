@@ -1,7 +1,9 @@
 #usda 1.0
 (
     metersPerUnit = 1
-    subLayers = [@demo_scene_robotiq_board4_flat_panels.usda@]
+    subLayers = [
+        @demo_scene_robotiq_board4_flat_panels.usda@
+    ]
     upAxis = "Z"
 )
 
@@ -9,9 +11,49 @@ over "World"
 {
     over "Physics"
     {
+        float3 cardboard:crushTiltDegrees = (0, 0, 0)
+        float cardboard:duration = 20
         float3 cardboard:graspTiltDegrees = (0, 0, 0)
         float3 cardboard:liftTiltDegrees = (0, 0, 0)
-        float3 cardboard:crushTiltDegrees = (0, 0, 0)
         float3 cardboard:releaseTiltDegrees = (0, 0, 0)
     }
+
+    over "Box"
+    {
+        over "SimMesh" (
+            prepend apiSchemas = ["CardboardSolverAPI"]
+        )
+        {
+            token cardboard:solver:implementation = "adaptiveROMVBD"
+            int cardboard:solver:iterations = 24
+            asset cardboard:solver:romBasis = @models/board4_rank8.npz@
+            bool cardboard:solver:romCheckResidual = 0
+            bool cardboard:solver:romDeferFallback = 1
+            double cardboard:solver:romElementFraction = 0.25
+            bool cardboard:solver:romElementFullAfterYield = 1
+            int cardboard:solver:romFullEvery = 2
+            bool cardboard:solver:romLocalVBD = 1
+            double cardboard:solver:romPatchCurvature = 7.5
+            int cardboard:solver:romPatchFullEvery = 8
+            double cardboard:solver:romPatchRelaxation = 0.5
+            int cardboard:solver:romPatchRings = 1
+            token cardboard:solver:romPatchSolver = "jacobi"
+            bool cardboard:solver:romStartWithROM = 1
+            double cardboard:solver:romTolerance = 1
+            token cardboard:solver:schedule = "guarded"
+        }
+
+        over "Materials"
+        {
+            over "Cardboard"
+            {
+                double cardboard:smallBend:creaseFrictionCurvature = 45
+                double cardboard:smallBend:end = 14.75
+                double cardboard:smallBend:knee = 0.75
+                double cardboard:smallBend:memoryCurvature = 0
+                double cardboard:smallBend:scale = 16
+            }
+        }
+    }
 }
+

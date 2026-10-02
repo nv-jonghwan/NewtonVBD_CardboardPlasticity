@@ -6,7 +6,8 @@ from isaacsim import SimulationApp
 app=SimulationApp({'headless':True,'width':args.width,'height':args.height,'renderer':'RayTracedLighting','active_gpu':args.gpu,'physics_gpu':args.gpu,'multi_gpu':False,'extra_args':['--/rtx/hydra/readTransformsFromFabricInRenderDelegate=false','--/renderer/multiGpu/enabled=false']})
 import omni.usd,omni.timeline
 import omni.replicator.core as rep
-from pxr import Usd
+from pxr import Usd,UsdGeom
+from cardboard.camera import set_camera_clipping
 import numpy as np
 from PIL import Image
 root=Path(__file__).resolve().parents[1];out=root/args.output;out.mkdir(parents=True,exist_ok=True)
@@ -18,6 +19,7 @@ from pxr import UsdPhysics
 stage.SetEditTarget(stage.GetSessionLayer())
 for prim in stage.Traverse():
     if prim.HasAPI(UsdPhysics.RigidBodyAPI):UsdPhysics.RigidBodyAPI(prim).CreateRigidBodyEnabledAttr(False)
+set_camera_clipping(UsdGeom.Camera(stage.GetPrimAtPath('/World/Camera')))
 timeline=omni.timeline.get_timeline_interface()
 product=rep.create.render_product('/World/Camera',(args.width,args.height));rgb=rep.AnnotatorRegistry.get_annotator('rgb');rgb.attach([product])
 last=int(stage.GetEndTimeCode());step=2;frames=list(range(0,last+1,step))

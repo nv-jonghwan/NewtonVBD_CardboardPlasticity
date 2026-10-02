@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "profile": "board4-crease45-rc1",
+  "profile": "board4-crease45-vertical",
   "files": [
     {
       "path": "assets/cardboard_robotiq_board10.usda",
@@ -178,6 +178,36 @@
       "path": "assets/models/board4_rank8.json",
       "bytes": 694,
       "sha256": "ead8a690af9f46fb60cc9ee826ae7283584695bd1af99fe2b79a075d629c358f"
+    },
+    {
+      "path": "config/vertical_pick.json",
+      "sha256": "311d389ff19f6b719c10c7de80234cbbb495654512deb708311225e07dc56969",
+      "bytes": 367
+    },
+    {
+      "path": "assets/demo_scene_robotiq_board4_vertical.usda",
+      "sha256": "fa46bb5df6cea205e6288a48679ada03f1c33338783f5a100b5ef59752c10f33",
+      "bytes": 1952
+    },
+    {
+      "path": "assets/cardboard_simready.usda",
+      "sha256": "192c6caadd2cd47066a40df5c2817480bf5c33475103773427c1705040eacad6",
+      "bytes": 502
+    },
+    {
+      "path": "schemas/cardboard/schema.usda",
+      "sha256": "76873bc50549242c4586a144d0f4d8a3046eb4b0128701e0cd92b0d8ba36e826",
+      "bytes": 6404
+    },
+    {
+      "path": "schemas/cardboard/resources/generatedSchema.usda",
+      "sha256": "f1fde84c86e181773610740cf6dc1236f8d2546f0f4bdbbe559e827bc3aef12b",
+      "bytes": 5420
+    },
+    {
+      "path": "schemas/cardboard/resources/plugInfo.json",
+      "sha256": "44aadee807afe8122b420febae26b8234e36f82bda989228c9c1102f5db47115",
+      "bytes": 2634
     }
   ],
   "non_active_or_runtime_dependencies": {

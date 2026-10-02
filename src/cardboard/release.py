@@ -1,4 +1,4 @@
-"""Portable release profile and input integrity checks (standard library only)."""
+"""Portable release profile and input integrity checks."""
 import hashlib
 import json
 import math
@@ -6,7 +6,7 @@ from pathlib import Path
 
 from . import ROOT
 
-DEFAULT_PROFILE = 'config/production_candidate.json'
+DEFAULT_PROFILE = 'config/vertical_pick.json'
 LOCK_FILE = 'config/release-inputs.lock.json'
 
 
@@ -29,6 +29,14 @@ def load_profile(path=DEFAULT_PROFILE, root=ROOT):
     p = json.loads(local_path(path, root).read_text())
     if p['schema_version'] != 1:
         raise ValueError('Unsupported profile schema')
+    if p.get('solver_source') == 'usd':
+        from .usd_solver import read_solver_config
+        authored = read_solver_config(local_path(p['scene'], root))
+        if authored is None:
+            raise ValueError('Profile requires CardboardSolverAPI on the USD simulation mesh')
+        authored['rom']['basis'] = Path(authored['rom']['basis']).relative_to(root.resolve()).as_posix()
+        p.update(authored)
+
     if type(p['iterations']) is not int or p['iterations'] < 1:
         raise ValueError('iterations must be a positive integer')
     if not math.isfinite(p['duration_s']) or p['duration_s'] <= 0:

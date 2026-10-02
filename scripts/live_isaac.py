@@ -5,7 +5,7 @@ Warp version. Isaac consumes deformed geometry and transforms; PhysX is disabled
 """
 import argparse,asyncio,csv,json,os,subprocess,sys,time,traceback,faulthandler,signal
 from pathlib import Path
-p=argparse.ArgumentParser();p.add_argument('--headless',action='store_true');p.add_argument('--physics-device',default='cuda:1');p.add_argument('--max-fps',type=int,default=30,help='Presentation refresh limit; Newton keeps its own fixed timestep');p.add_argument('--quality',choices=['realtime','board15-gentle','realtime5','reference','robotiq','robotiq-fine','robotiq-creased','robotiq-board10','robotiq-primitive','robotiq-conservative'],default='realtime');p.add_argument('--scene');p.add_argument('--replay-directory');p.add_argument('--duration',type=float,default=None);p.add_argument('--exit-when-done',action='store_true');p.add_argument('--autoplay',action='store_true');p.add_argument('--verify-controls',action='store_true');p.add_argument('--verify-recording',action='store_true');p.add_argument('--vbd-schedule',choices=['baseline','guarded']);p.add_argument('--small-bend-scale',type=float,default=1.,help='Opt-in experimental small-strain reinforcement');p.add_argument('--small-bend-knee',type=float,default=.3);p.add_argument('--small-bend-end',type=float,default=5.9)
+p=argparse.ArgumentParser();p.add_argument('--headless',action='store_true');p.add_argument('--physics-device',default='cuda:1');p.add_argument('--max-fps',type=int,default=30,help='Presentation refresh limit; Newton keeps its own fixed timestep');p.add_argument('--quality',choices=['realtime','board15-gentle','realtime5','reference','robotiq','robotiq-fine','robotiq-creased','robotiq-board10','robotiq-primitive','robotiq-conservative'],default='realtime');p.add_argument('--scene');p.add_argument('--replay-directory');p.add_argument('--duration',type=float,default=None);p.add_argument('--exit-when-done',action='store_true');p.add_argument('--autoplay',action='store_true');p.add_argument('--verify-controls',action='store_true');p.add_argument('--verify-recording',action='store_true');p.add_argument('--vbd-schedule',choices=['baseline','guarded']);p.add_argument('--small-bend-scale',type=float,default=None,help='Opt-in experimental small-strain reinforcement');p.add_argument('--small-bend-knee',type=float,default=.3);p.add_argument('--small-bend-end',type=float,default=5.9)
 p.add_argument('--record-directory',help='Save full live trajectory and material state in this local directory')
 p.add_argument('--solver-config',help='Explicit benchmark run_config JSON for experimental solver options')
 p.add_argument('--small-bend-memory-curvature',type=float,default=0.)
@@ -29,6 +29,7 @@ import numpy as np
 from pxr import Usd,UsdGeom,UsdPhysics,UsdLux,Gf,Vt,Sdf
 from cardboard.geometry import skin
 from cardboard.surface import PanelSurface
+from cardboard.camera import OVERVIEW, BOX_DETAIL, set_camera_view
 omni.usd.get_context().open_stage(str(ROOT/args.scene))
 for _ in range(20):app.update()
 stage=omni.usd.get_context().get_stage();stage.SetEditTarget(stage.GetSessionLayer())
@@ -46,7 +47,7 @@ ops={}
 for label in [str(p.GetPath()) for p in stage.Traverse() if p.HasAPI(UsdPhysics.RigidBodyAPI)]:
     prim=stage.GetPrimAtPath(label);parent=UsdGeom.XformCache().GetLocalToWorldTransform(prim.GetParent()).GetInverse();x=UsdGeom.Xformable(prim);x.ClearXformOpOrder();ops[label]=(x.AddTransformOp(opSuffix='liveNewton'),parent);UsdPhysics.RigidBodyAPI(prim).CreateRigidBodyEnabledAttr(False)
 light=UsdLux.DomeLight.Define(stage,'/World/LiveLight');light.CreateIntensityAttr(800)
-camera=UsdGeom.Camera.Define(stage,'/World/LiveCamera');camera.CreateFocalLengthAttr(24);camera.AddTransformOp().Set(Gf.Matrix4d().SetLookAt(Gf.Vec3d(1.7,-2,1.65),Gf.Vec3d(.05,0,1.02),Gf.Vec3d(0,0,1)).GetInverse())
+camera=UsdGeom.Camera.Define(stage,'/World/LiveCamera');set_camera_view(camera,*OVERVIEW)
 if not args.headless:
     from omni.kit.viewport.utility import get_active_viewport
     get_active_viewport().camera_path='/World/LiveCamera'
@@ -72,7 +73,7 @@ def start(autoplay=False):
     command('play' if autoplay else 'pause')
     log=(out/f'newton-{os.getpid()}-{time.time_ns()}.log').open('w')
     cmd=[str(ROOT/'scripts/python.sh'),str(ROOT/'scripts/stream_newton.py'),'--stream',str(stream),'--control',str(control),'--scenario','--scene',str(ROOT/args.scene),'--device',args.physics_device]
-    if args.small_bend_scale!=1.:cmd+=['--small-bend-scale',str(args.small_bend_scale),'--small-bend-knee',str(args.small_bend_knee),'--small-bend-end',str(args.small_bend_end),'--small-bend-memory-curvature',str(args.small_bend_memory_curvature),'--crease-friction-curvature',str(args.crease_friction_curvature)]
+    if args.small_bend_scale is not None:cmd+=['--small-bend-scale',str(args.small_bend_scale),'--small-bend-knee',str(args.small_bend_knee),'--small-bend-end',str(args.small_bend_end),'--small-bend-memory-curvature',str(args.small_bend_memory_curvature),'--crease-friction-curvature',str(args.crease_friction_curvature)]
     if args.record_directory:cmd+=['--record']
     if args.duration is not None:cmd+=['--duration',str(args.duration)]
     if args.solver_config:cmd+=['--solver-config',str(ROOT/args.solver_config)]
@@ -111,10 +112,7 @@ def action(name):
         else:command('pause')
     elif name in ('view_box','view_scene'):
         close=name=='view_box'
-        eye=Gf.Vec3d(1.05,-.85,1.25) if close else Gf.Vec3d(1.7,-2,1.65)
-        target=Gf.Vec3d(.32,0,.87) if close else Gf.Vec3d(.05,0,1.02)
-        camera.GetFocalLengthAttr().Set(35 if close else 24)
-        camera.GetOrderedXformOps()[0].Set(Gf.Matrix4d().SetLookAt(eye,target,Gf.Vec3d(0,0,1)).GetInverse())
+        set_camera_view(camera,*(BOX_DETAIL if close else OVERVIEW))
 def display_state(q,b,body_labels=None):
     if surface is not None:
         points,normals=surface.evaluate(q-center)

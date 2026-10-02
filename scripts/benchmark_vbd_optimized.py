@@ -6,6 +6,7 @@ import numpy as np
 import warp as wp
 from cardboard import ROOT
 from cardboard.scenario import PickCrushDrop
+from cardboard.usd_solver import write_runtime_layer
 
 p=argparse.ArgumentParser()
 p.add_argument('--scene',default='assets/demo_scene_robotiq_board10_primitive.usda')
@@ -76,6 +77,7 @@ except Exception as exc:
     (out/'progress.json').write_text(json.dumps(dict(t=0.,finished=False,error=repr(exc)),indent=2))
     raise
 init=time.perf_counter()-start
+write_runtime_layer(s,out/'effective_scene.usda',config)
 if a.panel_diagnostics:
     local=s.local-(s.local.min(0)+s.local.max(0))/2;half=np.ptp(local,axis=0)/2
     top=np.isclose(local[:,2],half[2],atol=1e-6)
@@ -117,6 +119,7 @@ try:
             if lift['min_z_m']-floor<.05 or min(lift['left_contact_N'],lift['right_contact_N'])<=1:raise RuntimeError('Lift/bilateral contact gate failed')
 except BaseException as exc:error=repr(exc)
 finally:
+    write_runtime_layer(s,out/'final_state.usda',config,state=True)
     elapsed=time.perf_counter()-start
     if s.rows:
         with (out/'state.csv').open('w') as f:

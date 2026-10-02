@@ -62,6 +62,7 @@ def main():
         from pxr import Gf, Sdf, UsdGeom, UsdLux, UsdPhysics, Vt
         from cardboard.geometry import skin
         from cardboard.surface import PanelSurface
+        from cardboard.camera import OVERVIEW, BOX_DETAIL, set_camera_view, NEAR_CLIP_M, FAR_CLIP_M
 
         source_bytes = source.read_bytes()
         (out/'trajectory.npz').write_bytes(source_bytes)
@@ -113,15 +114,14 @@ def main():
             render.SetNormalsInterpolation('vertex')
         UsdLux.DomeLight.Define(stage, '/World/ReplayLight').CreateIntensityAttr(800)
         views = [
-            ('Full sequence', (1.7, -2., 1.65), (.05, 0., 1.02), 24),
-            ('Box close-up', (1.05, -.85, 1.25), (.32, 0., .87), 35),
+            ('Full sequence', *OVERVIEW),
+            ('Box close-up', *BOX_DETAIL),
         ]
         annotators = []
         for n, (_, eye, target, focal) in enumerate(views):
             path = '/World/ReplayCamera'+str(n)
             camera = UsdGeom.Camera.Define(stage, path)
-            camera.CreateFocalLengthAttr(focal)
-            camera.AddTransformOp().Set(Gf.Matrix4d().SetLookAt(Gf.Vec3d(*eye), Gf.Vec3d(*target), Gf.Vec3d(0, 0, 1)).GetInverse())
+            set_camera_view(camera, eye, target, focal)
             product = rep.create.render_product(path, (args.width, args.height))
             rgb = rep.AnnotatorRegistry.get_annotator('rgb'); rgb.attach([product]); annotators.append(rgb)
         font_path = Path('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf')
@@ -161,7 +161,7 @@ def main():
             'source_sha256': hashlib.sha256(source_bytes).hexdigest(),
             'source_snapshot': str((out/'trajectory.npz').relative_to(ROOT)),
             'fps': args.fps, 'frame_count': len(samples), 'size': [args.width*2, args.height+72],
-            'simulation_duration_s': float(times[-1]), 'physics_recomputed': False,
+            'simulation_duration_s': float(times[-1]), 'physics_recomputed': False, 'clipping_range_m': [NEAR_CLIP_M, FAR_CLIP_M],
             'views': [dict(label=v[0], eye=v[1], target=v[2], focal_length=v[3]) for v in views]}
         (out/'render.json').write_text(json.dumps(metadata, indent=2)+'\n')
         if args.media_prefix:

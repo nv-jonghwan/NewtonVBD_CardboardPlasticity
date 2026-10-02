@@ -3,6 +3,7 @@ import numpy as np
 from pxr import Usd,UsdGeom,Sdf,Gf,Vt,UsdLux
 from . import ROOT
 from .geometry import skin
+from .camera import set_camera_view
 
 class Recorder:
     def __init__(self,sim,directory):
@@ -23,8 +24,7 @@ class Recorder:
         self.samples=[];self.bodies=[];self.joints=[];self.times=[]
         light=UsdLux.DomeLight.Define(self.stage,'/World/Lighting/Dome');light.CreateIntensityAttr(450)
         key=UsdLux.DistantLight.Define(self.stage,'/World/Lighting/Key');key.CreateIntensityAttr(2500);key.AddRotateXYZOp().Set(Gf.Vec3f(30,-25,-35));key.CreateAngleAttr(12)
-        camera=UsdGeom.Camera.Define(self.stage,'/World/Camera');camera.CreateFocalLengthAttr(26)
-        view=Gf.Matrix4d().SetLookAt(Gf.Vec3d(1.7,-2.0,1.65),Gf.Vec3d(.05,0,.90),Gf.Vec3d(0,0,1));camera.AddTransformOp().Set(view.GetInverse())
+        camera=UsdGeom.Camera.Define(self.stage,'/World/Camera');set_camera_view(camera,(1.7,-2.,1.65),(.05,0.,.90),26)
         self.frame=0
     def capture(self):
         s=self.sim;q=s.a.particle_q.numpy();b=s.a.body_q.numpy();local=(q-s.center).astype(np.float32);frame=round(s.time*s.fps)

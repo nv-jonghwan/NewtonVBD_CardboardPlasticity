@@ -1,116 +1,207 @@
 #usda 1.0
-( subLayers = [@usd/schema.usda@] )
-over "GLOBAL" (customData = {string libraryName = "cardboardSchemas" bool skipCodeGeneration = true}) {}
-class "CardboardScenarioAPI" (inherits = </APISchemaBase> customData = {token apiSchemaType = "singleApply"})
-{
+(
+    subLayers = [
+        @usd/schema.usda@
+    ]
+)
 
-    float3 cardboard:homeOffset = (-0.22, 0, 0.24)
-    float cardboard:approachClearance = 0.20
-    float cardboard:liftHeight = 0.12
-    float3 cardboard:graspTiltDegrees = (0, 0, 0)
-    float3 cardboard:liftTiltDegrees = (0, 0, 0)
-    float3 cardboard:crushTiltDegrees
-    float3 cardboard:releaseTiltDegrees
-    float cardboard:graspGap = 0.255
+over "GLOBAL" (
+    customData = {
+        string libraryName = "cardboardSchemas"
+        bool skipCodeGeneration = 1
+    }
+)
+{
+}
+
+class "CardboardScenarioAPI" (
+    customData = {
+        string apiSchemaType = "singleApply"
+    }
+    prepend inherits = </APISchemaBase>
+)
+{
+    float cardboard:approachClearance = 0.2
+    float cardboard:crushForce = 70
     float cardboard:crushGap = 0.11
+    float cardboard:crushRampFraction = 0.65
+    float3 cardboard:crushTiltDegrees
     float cardboard:graspForce = 18
+    float cardboard:graspGap = 0.255
+    float3 cardboard:graspTiltDegrees = (0, 0, 0)
+    float3 cardboard:homeOffset = (-0.22, 0, 0.24)
     float cardboard:liftForce = 0
     float cardboard:liftForceRampFraction = 0.25
-    float cardboard:crushForce = 70
-    float cardboard:crushRampFraction = 0.65
-    float cardboard:releaseRampFraction = 1
+    float cardboard:liftHeight = 0.12
+    float3 cardboard:liftTiltDegrees = (0, 0, 0)
     float[] cardboard:phaseEnds = [1, 3, 5, 7, 9, 12, 13, 16]
+    float cardboard:releaseRampFraction = 1
+    float3 cardboard:releaseTiltDegrees
 }
 
-class "CardboardMaterialAPI" (inherits = </APISchemaBase> customData = {token apiSchemaType = "singleApply"})
+class "CardboardMaterialAPI" (
+    customData = {
+        string apiSchemaType = "singleApply"
+    }
+    prepend inherits = </APISchemaBase>
+)
 {
-
-    float cardboard:thickness = 0.003
     float cardboard:arealDensity = 0.65
-    float cardboard:membraneShear = 12600
+    float cardboard:bendingCD = 0.02016
+    float cardboard:bendingDamping = 0.0002
+    float cardboard:bendingMD = 0.042
+    float cardboard:bendingReferenceThickness = 0.003
+    float cardboard:bendingRelaxationTime = 0
+    float cardboard:bendingThicknessExponent = 0
+    token cardboard:calibrationStatus = "illustrativeUncalibrated"
+    float cardboard:creaseDamageLength
+    float cardboard:damageRate = 0.35
+    float cardboard:friction = 0.65
+    float cardboard:hardeningRatio = 0.02
+    float cardboard:internalVelocityDamping
     float cardboard:membraneArea = 21000
     float cardboard:membraneDamping = 0.0002
-    float cardboard:bendingMD = 0.042
-    float cardboard:bendingCD = 0.02016
-    float cardboard:yieldCurvature = 12
-    float cardboard:hardeningRatio = 0.02
-    float cardboard:damageRate = 0.35
+    float cardboard:membraneShear = 12600
+    bool cardboard:plasticityEnabled = 1
     float cardboard:residualStiffness = 0.25
-    float cardboard:bendingDamping = 0.0002
-    float cardboard:bendingReferenceThickness = 0.003
-    float cardboard:bendingThicknessExponent = 0
-    float cardboard:bendingRelaxationTime = 0
     float cardboard:selfContactThicknessScale = 0.5
-    float cardboard:friction = 0.65
-    bool cardboard:plasticityEnabled = true
-    token cardboard:calibrationStatus = "illustrativeUncalibrated"
+    double cardboard:smallBend:creaseFrictionCurvature
+    double cardboard:smallBend:end
+    double cardboard:smallBend:knee
+    double cardboard:smallBend:memoryCurvature
+    double cardboard:smallBend:scale
+    float cardboard:supportedInternalDamping
+    float cardboard:supportedRigidDamping
+    float cardboard:thickness = 0.003
+    float cardboard:yieldCurvature = 12
 }
 
-class "CardboardShellAPI" (inherits = </APISchemaBase> customData = {token apiSchemaType = "singleApply"})
+class "CardboardShellAPI" (
+    customData = {
+        string apiSchemaType = "singleApply"
+    }
+    prepend inherits = </APISchemaBase>
+)
 {
-
-    uint cardboard:schemaVersion = 1
-    token cardboard:solver = "newtonVBD15"
-    point3f[] cardboard:restPoints
-    int4[] cardboard:hingeIndices
-    float[] cardboard:referenceAngles
     float[] cardboard:dualWidths
     float[] cardboard:edgeStiffness
-    float3[] cardboard:materialDirection
+    int4[] cardboard:hingeIndices
     rel cardboard:material
+    float3[] cardboard:materialDirection
+    float[] cardboard:referenceAngles
     rel cardboard:renderMesh
+    point3f[] cardboard:restPoints
+    uint cardboard:schemaVersion = 1
+    token cardboard:solver = "newtonVBD15"
     asset cardboard:sourceAsset
     float cardboard:sourceScale = 0.4
 }
 
-class "CardboardPlasticStateAPI" (inherits = </APISchemaBase> customData = {token apiSchemaType = "singleApply"})
+class "CardboardPlasticStateAPI" (
+    customData = {
+        string apiSchemaType = "singleApply"
+    }
+    prepend inherits = </APISchemaBase>
+)
 {
-
-    float[] cardboard:plasticAngles
     float[] cardboard:accumulatedAngles
-    float[] cardboard:plasticDissipation
+    float[] cardboard:creaseFrictionWork
     float[] cardboard:damage
+    float[] cardboard:plasticAngles
+    float[] cardboard:plasticDissipation
     vector3f[] cardboard:velocities
 }
 
-class "CardboardBindingAPI" (inherits = </APISchemaBase> customData = {token apiSchemaType = "singleApply"})
+class "CardboardBindingAPI" (
+    customData = {
+        string apiSchemaType = "singleApply"
+    }
+    prepend inherits = </APISchemaBase>
+)
 {
-
+    int3[] cardboard:bindingIndices
+    vector3f[] cardboard:bindingOffsets
+    float3[] cardboard:bindingWeights
+    rel cardboard:simulationMesh
     token cardboard:surfaceInterpolation = "linear"
     float cardboard:visualCreaseAngleDegrees = 45
     float cardboard:visualCreaseTransitionDegrees = 10
-
-    rel cardboard:simulationMesh
-    int3[] cardboard:bindingIndices
-    float3[] cardboard:bindingWeights
-    vector3f[] cardboard:bindingOffsets
+    bool cardboard:visualSmoothThickness
 }
 
-class "CardboardDemoAPI" (inherits = </APISchemaBase> customData = {token apiSchemaType = "singleApply"})
+class "CardboardDemoAPI" (
+    customData = {
+        string apiSchemaType = "singleApply"
+    }
+    prepend inherits = </APISchemaBase>
+)
 {
-
-    float cardboard:fps = 60
-    int cardboard:substeps = 16
-    int cardboard:iterations = 16
-    int cardboard:rigidParticleContactCapacity = 256
-    float cardboard:rigidJointLinearStiffness = 100000
-    bool cardboard:rigidCompliantALM = false
-    bool cardboard:kinematicArm = false
-    bool cardboard:precomputeCommands = false
-    bool cardboard:realtimePacing = false
-    bool cardboard:translationBlockSolve = false
-    float cardboard:duration = 11
-    float cardboard:gravityRampSeconds = 0
-    float cardboard:contactStiffness = 20000
+    rel cardboard:box
     float cardboard:contactDamping = 0.1
-    float cardboard:maxFingerForce = 30
+    float cardboard:contactStiffness = 20000
+    bool cardboard:coupledSupportedSolve
+    float cardboard:duration = 11
+    rel cardboard:fingerJoints
     float cardboard:fingerPositionStiffness = 1200
     float cardboard:fingerVelocityDamping = 12
-    float cardboard:openGap = 0.32
-    float cardboard:minimumGap = 0.16
-    float cardboard:twistRadians = 0.12
+    float cardboard:fps = 60
+    float cardboard:graspRampFraction
+    float cardboard:gravityRampSeconds = 0
+    string cardboard:gripperModel
+    float cardboard:gripperScale
+    int cardboard:iterations = 16
+    bool cardboard:kinematicArm = 0
+    float cardboard:liftMoveFraction
+    float cardboard:maxFingerForce = 30
     float cardboard:maxWristTorque = 2
-    rel cardboard:box
+    float cardboard:minimumGap = 0.16
+    float cardboard:openGap = 0.32
+    int cardboard:particleSolveInterval
+    bool cardboard:precomputeCommands = 0
+    bool cardboard:realtimePacing = 0
+    bool cardboard:restRefinement
+    bool cardboard:rigidCompliantALM = 0
+    float cardboard:rigidJointLinearStiffness = 100000
+    int cardboard:rigidParticleContactCapacity = 256
     rel cardboard:robot
-    rel cardboard:fingerJoints
+    float cardboard:robotiqDriveDamping
+    float cardboard:robotiqDriveStiffness
+    float cardboard:robotiqPinchDamping
+    float cardboard:robotiqPinchStiffness
+    bool cardboard:rotationBlockSolve
+    float cardboard:selfContactRestExclusion
+    int cardboard:sleepIterations
+    bool cardboard:smoothMotion
+    int cardboard:substeps = 16
+    bool cardboard:supportedSleep
+    float cardboard:toolReach
+    bool cardboard:translationBlockSolve = 0
+    float cardboard:twistRadians = 0.12
 }
+
+class "CardboardSolverAPI" (
+    customData = {
+        string apiSchemaType = "singleApply"
+    }
+    prepend inherits = </APISchemaBase>
+)
+{
+    token cardboard:solver:implementation
+    int cardboard:solver:iterations
+    asset cardboard:solver:romBasis
+    bool cardboard:solver:romCheckResidual
+    bool cardboard:solver:romDeferFallback
+    double cardboard:solver:romElementFraction
+    bool cardboard:solver:romElementFullAfterYield
+    int cardboard:solver:romFullEvery
+    bool cardboard:solver:romLocalVBD
+    double cardboard:solver:romPatchCurvature
+    int cardboard:solver:romPatchFullEvery
+    double cardboard:solver:romPatchRelaxation
+    int cardboard:solver:romPatchRings
+    token cardboard:solver:romPatchSolver
+    bool cardboard:solver:romStartWithROM
+    double cardboard:solver:romTolerance
+    token cardboard:solver:schedule
+}
+
